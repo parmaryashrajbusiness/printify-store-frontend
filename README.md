@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NeonStore Frontend
 
 React + Vite storefront for Printify-powered products.
@@ -15,3 +16,6 @@ React + Vite storefront for Printify-powered products.
 npm ci
 npm run build
 npm run preview
+=======
+# printify-store-frontend
+>>>>>>> 71a8eef299a760c27548f5ebc5e149ec85f53781
