@@ -140,12 +140,23 @@ export const checkoutCountries = {
   // FR: { ... },
 };
 
+export const allowedCountries = [checkoutCountries.IN].map((country) => ({
+  code: country.code,
+  label: country.label,
+  phoneDigits: country.phoneDigits,
+  postalLength: country.postalLength,
+}));
+
+/*
+Future Printify restore:
+
 export const allowedCountries = Object.values(checkoutCountries).map((country) => ({
   code: country.code,
   label: country.label,
   phoneDigits: country.phoneDigits,
   postalLength: country.postalLength,
 }));
+*/
 
 export function getCountryConfig(countryCode) {
   return checkoutCountries[countryCode] || checkoutCountries.IN;

@@ -57,9 +57,35 @@ function getStepIndex(order) {
   const status = String(order?.printifyStatus || order?.status || "").toLowerCase();
 
   if (status.includes("delivered")) return 4;
-  if (status.includes("shipped")) return 3;
-  if (status.includes("production") || status.includes("fulfilled")) return 2;
-  if (status.includes("hold") || status.includes("pending") || status.includes("processing")) return 1;
+
+  if (
+    status.includes("shipped") ||
+    status.includes("dispatched") ||
+    status.includes("in transit") ||
+    status.includes("in-transit")
+  ) {
+    return 3;
+  }
+
+  if (
+    status.includes("production") ||
+    status.includes("fulfilled") ||
+    status.includes("live") ||
+    status.includes("processing") ||
+    status.includes("packed") ||
+    status.includes("ready to ship")
+  ) {
+    return 2;
+  }
+
+  if (
+    status.includes("hold") ||
+    status.includes("pending") ||
+    status.includes("created") ||
+    status.includes("new")
+  ) {
+    return 1;
+  }
 
   return 0;
 }
@@ -68,10 +94,35 @@ function statusPill(order) {
   const status = String(order?.printifyStatus || order?.status || "").toLowerCase();
 
   if (status.includes("delivered")) return "Delivered";
-  if (status.includes("shipped")) return "Shipped";
-  if (status.includes("production")) return "In production";
-  if (status.includes("hold")) return "Waiting confirmation";
+
+  if (
+    status.includes("shipped") ||
+    status.includes("dispatched") ||
+    status.includes("in transit") ||
+    status.includes("in-transit")
+  ) {
+    return "Shipped";
+  }
+
+  if (
+    status.includes("production") ||
+    status.includes("live") ||
+    status.includes("processing")
+  ) {
+    return "In production";
+  }
+
+  if (status.includes("packed") || status.includes("ready to ship")) {
+    return "Ready to ship";
+  }
+
+  if (status.includes("hold") || status.includes("pending") || status.includes("new")) {
+    return "Waiting confirmation";
+  }
+
   if (status.includes("cancel")) return "Cancelled";
+
+  if (status.includes("returned") || status.includes("rto")) return "Returned";
 
   return order?.displayStatus || "Order received";
 }
@@ -79,7 +130,14 @@ function statusPill(order) {
 function canCancelOrder(order) {
   const status = String(order?.printifyStatus || order?.status || "").toLowerCase();
 
-  return status === "on-hold" || status === "payment-not-received";
+  return (
+    status === "on-hold" ||
+    status === "on hold" ||
+    status === "payment-not-received" ||
+    status === "new" ||
+    status === "created" ||
+    status === "pending"
+  );
 }
 
 function canDeleteOrderRecord(order) {
@@ -87,7 +145,9 @@ function canDeleteOrderRecord(order) {
 
   return (
     status.includes("cancel") ||
-    status.includes("delivered")
+    status.includes("delivered") ||
+    status.includes("returned") ||
+    status.includes("rto")
   );
 }
 
@@ -274,7 +334,7 @@ export default function TrackOrders() {
             </div>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold">Track Order</p>
-              <p className="text-xs text-zinc-500">Live status from Printify</p>
+              <p className="text-xs text-zinc-500">Live fulfillment status</p>
             </div>
           </div>
         </div>
@@ -416,7 +476,7 @@ export default function TrackOrders() {
                 <div className="mt-7 grid gap-4 md:grid-cols-2">
                   <InfoCard
                     icon={<Package className="h-5 w-5" />}
-                    title="Printify Status"
+                    title="Fulfillment Status"
                     value={activeOrder?.printifyStatus || "Processing"}
                   />
 

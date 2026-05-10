@@ -20,7 +20,9 @@ export default function CheckoutModal({
   customerRegion,
   cartItems = [],
 }) {
-  const initialCountry = customerRegion?.country || "IN";
+  const initialCountry = "IN";
+  // Future Printify restore:
+  // const initialCountry = customerRegion?.country || "IN";
   const initialState = getStatesForCountry(initialCountry)[0]?.code || "";
 
   const [form, setForm] = useState({
@@ -38,9 +40,14 @@ export default function CheckoutModal({
 
   const [errors, setErrors] = useState({});
   const [policiesAccepted, setPoliciesAccepted] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState("RAZORPAY");
+
+  /*
+  Future Printify restore:
   const [paymentProvider, setPaymentProvider] = useState(
     customerRegion?.paymentProvider || "RAZORPAY"
   );
+  */
 
   const isIndiaCheckout = form.country === "IN";
 
@@ -59,15 +66,15 @@ export default function CheckoutModal({
 
   const checkoutCurrencyByCountry = {
     IN: "INR",
+
+    /*
+    Future Printify restore:
     US: "USD",
     AU: "AUD",
-
-    // Temporarily disabled until GPSR/EU compliance is ready
-    // DE: "EUR",
-    // FR: "EUR",
+    */
   };
 
-  const currency = checkoutCurrencyByCountry[form.country] || "USD";
+  const currency = checkoutCurrencyByCountry[form.country] || "INR";
 
   const parseMoney = (value) => {
     if (value == null) return 0;
@@ -158,14 +165,15 @@ export default function CheckoutModal({
 
   const shippingFeeByCountry = {
     IN: 149.0,
+
+    /*
+    Future Printify restore:
     US: 6.99,
     AU: 10.99,
-
-    // Temporarily disabled until GPSR/EU compliance is ready
-    // DE: 7.99,
-    // FR: 7.99,
+    */
   };
-  const shippingFee = shippingFeeByCountry[form.country] ?? 6.99;
+
+  const shippingFee = shippingFeeByCountry[form.country] ?? 149.0;
 
   // This should match your backend APP_INTERNATIONAL_FEE_BUFFER_PERCENT.
   // If your backend uses 5%, keep 5 here. If it uses 12%, keep 12 here.
@@ -186,10 +194,16 @@ export default function CheckoutModal({
   useEffect(() => {
     if (!open) return;
 
+    const nextCountry = "IN";
+    const nextProvider = "RAZORPAY";
+    const nextState = getStatesForCountry(nextCountry)[0]?.code || "";
+
+    /*
+    Future Printify restore:
     const nextCountry = customerRegion?.country || "IN";
     const nextProvider = nextCountry === "IN" ? "RAZORPAY" : "PAYPAL";
-
     const nextState = getStatesForCountry(nextCountry)[0]?.code || "";
+    */
 
     setForm((prev) => ({
       ...prev,
@@ -200,7 +214,10 @@ export default function CheckoutModal({
       postalCode: "",
     }));
 
-    setPaymentProvider(customerRegion?.paymentProvider || nextProvider);
+    setPaymentProvider(nextProvider);
+
+    // Future Printify restore:
+    // setPaymentProvider(customerRegion?.paymentProvider || nextProvider);
     setErrors({});
     setPoliciesAccepted(false);
   }, [open, customerRegion]);
@@ -235,7 +252,12 @@ export default function CheckoutModal({
     });
 
     if (key === "country") {
+      setPaymentProvider("RAZORPAY");
+
+      /*
+      Future Printify restore:
       setPaymentProvider(value === "IN" ? "RAZORPAY" : "PAYPAL");
+      */
     }
 
     setErrors((prev) => ({
@@ -272,10 +294,13 @@ export default function CheckoutModal({
       return;
     }
 
-    if (form.country !== "IN" && paymentProvider !== "PAYPAL") {
-      setErrors({ payment: "International checkout must use PayPal." });
-      return;
-    }
+    /*
+Future Printify restore:
+if (form.country !== "IN" && paymentProvider !== "PAYPAL") {
+  setErrors({ payment: "International checkout must use PayPal." });
+  return;
+}
+*/
 
     const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
 
@@ -313,7 +338,7 @@ export default function CheckoutModal({
                 <p className="text-sm uppercase tracking-[0.22em] text-green-300">Checkout</p>
                 <h2 className="mt-2 text-2xl font-semibold">Shipping details</h2>
                 <p className="mt-2 text-sm text-zinc-400">
-                  Country controls currency and available payment method.
+                  India checkout uses INR and Razorpay.
                 </p>
               </div>
 
@@ -513,7 +538,7 @@ export default function CheckoutModal({
 
               <p className="mb-3 mt-6 text-sm font-medium text-zinc-300">Payment Method</p>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 <button
                   type="button"
                   disabled={!isIndiaCheckout}
@@ -535,28 +560,34 @@ export default function CheckoutModal({
                   </p>
                 </button>
 
-                <button
-                  type="button"
-                  disabled={isIndiaCheckout}
-                  onClick={() => {
-                    if (isIndiaCheckout) return;
-                    setPaymentProvider("PAYPAL");
-                    setErrors((prev) => ({ ...prev, payment: "" }));
-                  }}
-                  className={`rounded-2xl border p-4 text-left transition ${isIndiaCheckout
-                    ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-zinc-600"
-                    : paymentProvider === "PAYPAL"
-                      ? "border-green-400 bg-green-500/10 text-green-100"
-                      : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
-                    }`}
-                >
-                  <p className="font-semibold">PayPal</p>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    {isIndiaCheckout
-                      ? "Available only for international checkout"
-                      : "International cards and PayPal"}
-                  </p>
-                </button>
+                {/*
+Future Printify restore:
+
+<button
+  type="button"
+  disabled={isIndiaCheckout}
+  onClick={() => {
+    if (isIndiaCheckout) return;
+
+    setPaymentProvider("PAYPAL");
+    setErrors((prev) => ({ ...prev, payment: "" }));
+  }}
+  className={`rounded-2xl border p-4 text-left transition ${isIndiaCheckout
+    ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-zinc-600"
+    : paymentProvider === "PAYPAL"
+    ? "border-green-400 bg-green-500/10 text-green-100"
+    : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+  }`}
+>
+  <p className="font-semibold">PayPal</p>
+  <p className="mt-1 text-xs text-zinc-400">
+    {isIndiaCheckout
+      ? "Available only for international checkout"
+      : "International cards and PayPal"}
+  </p>
+</button>
+
+*/}
               </div>
             </div>
 
