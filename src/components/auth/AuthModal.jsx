@@ -1,10 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User, ShieldCheck, ArrowLeft } from "lucide-react";
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  ShieldCheck,
+  ArrowLeft,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authApi } from "@/api/authApi";
 import { useAuth } from "@/context/AuthContext";
+
+const PASSWORD_RULES = [
+  {
+    id: "length",
+    label: "6 to 30 characters",
+    test: (value) => value.length >= 6 && value.length <= 30,
+  },
+  {
+    id: "upper",
+    label: "At least one uppercase letter",
+    test: (value) => /[A-Z]/.test(value),
+  },
+  {
+    id: "lower",
+    label: "At least one lowercase letter",
+    test: (value) => /[a-z]/.test(value),
+  },
+  {
+    id: "number",
+    label: "At least one number",
+    test: (value) => /\d/.test(value),
+  },
+  {
+    id: "special",
+    label: "At least one special character",
+    test: (value) => /[^A-Za-z0-9]/.test(value),
+  },
+];
+
+function isStrongPassword(password) {
+  return PASSWORD_RULES.every((rule) => rule.test(password));
+}
+
+function getPasswordError(password) {
+  if (!password) return "Please enter a password.";
+
+  if (password.length < 6 || password.length > 30) {
+    return "Password must be between 6 and 30 characters.";
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain at least one uppercase letter.";
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return "Password must contain at least one lowercase letter.";
+  }
+
+  if (!/\d/.test(password)) {
+    return "Password must contain at least one number.";
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return "Password must contain at least one special character.";
+  }
+
+  return "";
+}
 
 export default function AuthModal({ open, onClose, defaultMode = "login" }) {
   const { login, register } = useAuth();
@@ -63,6 +130,17 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
     return true;
   };
 
+  const validatePassword = () => {
+    const passwordError = getPasswordError(form.password);
+
+    if (passwordError) {
+      setError(passwordError);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSendRegisterOtp = async () => {
     if (form.fullName.trim().length < 2) {
       setError("Please enter your full name.");
@@ -70,11 +148,7 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
     }
 
     if (!validateEmail()) return;
-
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
+    if (!validatePassword()) return;
 
     try {
       setLoading(true);
@@ -166,10 +240,7 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
       return;
     }
 
-    if (form.password.length < 6) {
-      setError("New password must be at least 6 characters.");
-      return;
-    }
+    if (!validatePassword()) return;
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
@@ -315,15 +386,23 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
                     <Input
                       type="password"
                       value={form.password}
+                      maxLength={30}
                       onChange={(e) => updateField("password", e.target.value)}
                       placeholder="Password"
                       className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
                     />
                   </IconInput>
 
+                  <PasswordRules password={form.password} />
+
                   <Button
                     onClick={handleSendRegisterOtp}
-                    disabled={!form.fullName || !form.email || !form.password || loading}
+                    disabled={
+                      !form.fullName ||
+                      !form.email ||
+                      !isStrongPassword(form.password) ||
+                      loading
+                    }
                     className="h-12 w-full rounded-2xl"
                   >
                     {loading ? "Sending OTP..." : "Send OTP"}
@@ -338,22 +417,14 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
                     <span className="text-zinc-200">{form.email}</span>.
                   </p>
 
-                  <IconInput icon={ShieldCheck}>
-                    <Input
-                      value={form.otp}
-                      onChange={(e) =>
-                        updateField("otp", e.target.value.replace(/\D/g, "").slice(0, 6))
-                      }
-                      placeholder="Enter 6 digit OTP"
-                      inputMode="numeric"
-                      maxLength={6}
-                      className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
-                    />
-                  </IconInput>
+                  <OtpInput
+                    value={form.otp}
+                    onChange={(value) => updateField("otp", value)}
+                  />
 
                   <Button
                     onClick={handleVerifyAndRegister}
-                    disabled={!form.otp || loading}
+                    disabled={form.otp.length !== 6 || loading}
                     className="h-12 w-full rounded-2xl"
                   >
                     {loading ? "Verifying..." : "Verify OTP & Register"}
@@ -372,6 +443,7 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
                     type="button"
                     onClick={() => {
                       setStep("form");
+                      updateField("otp", "");
                       clearStatus();
                     }}
                     className="inline-flex w-full items-center justify-center gap-2 text-sm text-zinc-400 hover:text-white"
@@ -397,6 +469,7 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
                     <Input
                       type="password"
                       value={form.password}
+                      maxLength={30}
                       onChange={(e) => updateField("password", e.target.value)}
                       placeholder="Password"
                       className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
@@ -475,45 +548,55 @@ export default function AuthModal({ open, onClose, defaultMode = "login" }) {
                     <span className="text-zinc-200">{form.email}</span> and create a new password.
                   </p>
 
-                  <IconInput icon={ShieldCheck}>
-                    <Input
-                      value={form.otp}
-                      onChange={(e) =>
-                        updateField("otp", e.target.value.replace(/\D/g, "").slice(0, 6))
-                      }
-                      placeholder="Enter 6 digit OTP"
-                      inputMode="numeric"
-                      maxLength={6}
-                      className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
-                    />
-                  </IconInput>
+                  <OtpInput
+                    value={form.otp}
+                    onChange={(value) => updateField("otp", value)}
+                  />
 
                   <IconInput icon={Lock}>
                     <Input
                       type="password"
                       value={form.password}
+                      maxLength={30}
                       onChange={(e) => updateField("password", e.target.value)}
                       placeholder="New password"
                       className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
                     />
                   </IconInput>
 
+                  <PasswordRules password={form.password} />
+
                   <IconInput icon={Lock}>
                     <Input
                       type="password"
                       value={form.confirmPassword}
+                      maxLength={30}
                       onChange={(e) => updateField("confirmPassword", e.target.value)}
                       placeholder="Confirm new password"
                       className="h-12 rounded-2xl border border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500"
                     />
                   </IconInput>
 
+                  {form.confirmPassword ? (
+                    <p
+                      className={`text-xs ${
+                        form.password === form.confirmPassword
+                          ? "text-green-300"
+                          : "text-red-300"
+                      }`}
+                    >
+                      {form.password === form.confirmPassword
+                        ? "Passwords match"
+                        : "Passwords do not match"}
+                    </p>
+                  ) : null}
+
                   <Button
                     onClick={handleResetPassword}
                     disabled={
-                      !form.otp ||
-                      !form.password ||
-                      !form.confirmPassword ||
+                      form.otp.length !== 6 ||
+                      !isStrongPassword(form.password) ||
+                      form.password !== form.confirmPassword ||
                       loading
                     }
                     className="h-12 w-full rounded-2xl"
@@ -599,6 +682,137 @@ function IconInput({ icon: Icon, children }) {
     <div className="relative">
       <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
       {children}
+    </div>
+  );
+}
+
+function PasswordRules({ password }) {
+  if (!password) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-zinc-400">
+        Password must be 6 to 30 characters and include uppercase, lowercase,
+        number, and special character.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+      <p className="mb-2 text-xs font-medium text-zinc-300">Password requirements</p>
+
+      <div className="space-y-1.5">
+        {PASSWORD_RULES.map((rule) => {
+          const passed = rule.test(password);
+
+          return (
+            <div
+              key={rule.id}
+              className={`flex items-center gap-2 text-xs ${
+                passed ? "text-green-300" : "text-zinc-500"
+              }`}
+            >
+              {passed ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : (
+                <Circle className="h-3.5 w-3.5" />
+              )}
+              {rule.label}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function OtpInput({ value, onChange }) {
+  const refs = useRef([]);
+
+  const digits = Array.from({ length: 6 }, (_, index) => value[index] || "");
+
+  const updateDigit = (index, digit) => {
+    const next = [...digits];
+    next[index] = digit;
+
+    onChange(next.join(""));
+  };
+
+  const handleChange = (index, rawValue) => {
+    const onlyNumbers = rawValue.replace(/\D/g, "");
+
+    if (!onlyNumbers) {
+      updateDigit(index, "");
+      return;
+    }
+
+    if (onlyNumbers.length > 1) {
+      const chars = onlyNumbers.slice(0, 6).split("");
+      const next = Array.from({ length: 6 }, (_, i) => chars[i] || "");
+
+      onChange(next.join(""));
+
+      const focusIndex = Math.min(chars.length, 5);
+      refs.current[focusIndex]?.focus();
+      return;
+    }
+
+    updateDigit(index, onlyNumbers);
+
+    if (index < 5) {
+      refs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, event) => {
+    if (event.key === "Backspace" && !digits[index] && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+
+    if (event.key === "ArrowLeft" && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+
+    if (event.key === "ArrowRight" && index < 5) {
+      refs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (event) => {
+    event.preventDefault();
+
+    const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+
+    if (!pasted) return;
+
+    onChange(pasted);
+
+    const focusIndex = Math.min(pasted.length, 5);
+    refs.current[focusIndex]?.focus();
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between gap-2" onPaste={handlePaste}>
+        {digits.map((digit, index) => (
+          <input
+            key={index}
+            ref={(el) => {
+              refs.current[index] = el;
+            }}
+            value={digit}
+            onChange={(e) => handleChange(index, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            inputMode="numeric"
+            maxLength={1}
+            className="h-12 w-11 rounded-2xl border border-white/10 bg-white/5 text-center text-lg font-semibold text-white outline-none transition placeholder:text-zinc-500 focus:border-green-400/70 focus:bg-white/10 sm:w-12"
+            aria-label={`OTP digit ${index + 1}`}
+          />
+        ))}
+      </div>
+
+      <p className="mt-2 text-center text-xs text-zinc-500">
+        Enter the 6 digit verification code
+      </p>
     </div>
   );
 }
