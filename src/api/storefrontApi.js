@@ -1,17 +1,51 @@
 import { apiFetch } from "./http";
 
-export const storefrontApi = {
-  getHomeSections: async () => apiFetch("/storefront/home"),
+const QIKINK_PROVIDER = "QIKINK";
 
-  getProducts: async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/storefront/products${query ? `?${query}` : ""}`);
+function isQikinkProduct(product) {
+  return String(product?.fulfillmentProvider || "").toUpperCase() === QIKINK_PROVIDER;
+}
+
+function onlyQikinkProducts(data) {
+  if (!Array.isArray(data)) return [];
+  return data.filter(isQikinkProduct);
+}
+
+function onlyQikinkHome(data) {
+  return {
+    ...data,
+    featuredProducts: onlyQikinkProducts(data?.featuredProducts),
+  };
+}
+
+export const storefrontApi = {
+  getHomeSections: async () => {
+    const data = await apiFetch("/storefront/home");
+    return onlyQikinkHome(data);
   },
 
-  getFeaturedProducts: async () => apiFetch("/storefront/products/featured"),
+  getProducts: async (params = {}) => {
+    const query = new URLSearchParams({
+      ...params,
+      provider: QIKINK_PROVIDER,
+    }).toString();
 
-  getProductBySlug: async (slug) =>
-    apiFetch(`/storefront/products/${slug}`),
+    const data = await apiFetch(`/storefront/products${query ? `?${query}` : ""}`);
+    return onlyQikinkProducts(data);
+  },
+
+  getFeaturedProducts: async () => {
+    const data = await apiFetch("/storefront/products/featured?provider=QIKINK");
+    return onlyQikinkProducts(data);
+  },
+
+  getProductBySlug: async (slug) => {
+    const product = await apiFetch(`/storefront/products/${slug}`);
+    if (!isQikinkProduct(product)) {
+      throw new Error("Product not available");
+    }
+    return product;
+  },
 
   // CART
   getCart: async () => apiFetch("/cart"),
@@ -48,12 +82,11 @@ export const storefrontApi = {
 
   getWishlist: async () => apiFetch("/wishlist"),
 
-  // =======================
   // REVIEWS
-  // =======================
-
-  getSimilarProducts: async (productId) =>
-    apiFetch(`/storefront/products/${productId}/similar`),
+  getSimilarProducts: async (productId) => {
+    const data = await apiFetch(`/storefront/products/${productId}/similar`);
+    return onlyQikinkProducts(data);
+  },
 
   getProductReviews: async (productId) =>
     apiFetch(`/storefront/products/${productId}/reviews`),
@@ -110,16 +143,13 @@ export const storefrontApi = {
       body: JSON.stringify({ paypalOrderId }),
     }),
 
-  cancelOrder: async (orderId) => {
-    return await apiFetch(`/orders/${orderId}/cancel`, {
+  cancelOrder: async (orderId) =>
+    apiFetch(`/orders/${orderId}/cancel`, {
       method: "POST",
-    });
-  },
+    }),
 
-  deleteOrderRecord: async (orderId) => {
-    return await apiFetch(`/orders/${orderId}`, {
+  deleteOrderRecord: async (orderId) =>
+    apiFetch(`/orders/${orderId}`, {
       method: "DELETE",
-    });
-  },
-
+    }),
 };
