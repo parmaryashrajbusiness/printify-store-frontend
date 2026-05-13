@@ -228,11 +228,11 @@ export default function ProductDetails() {
         const data = await storefrontApi.getProductBySlug(slug, customerRegion);
         setProduct(data);
 
+        const firstVariant =
+          data.variants?.find((variant) => variant.enabled) || data.variants?.[0];
+
         const firstVariantId =
-          data.defaultVariantId ||
-          data.variants?.find((variant) => variant.enabled)?.printifyVariantId ||
-          data.variants?.[0]?.printifyVariantId ||
-          "";
+          firstVariant ? variantIdForRegion(firstVariant, customerRegion) : "";
 
         setSelectedVariantId(firstVariantId);
 
@@ -257,14 +257,15 @@ export default function ProductDetails() {
         setReviews(Array.isArray(productReviews) ? productReviews : []);
       } catch (err) {
         console.error(err);
-        showToast("error", "Could not load product.");
+        showToast("error", "This product is not available in the selected country.");
+        navigate("/");
       } finally {
         setLoading(false);
       }
     }
 
     loadProduct();
-  }, [slug]);
+  }, [slug, customerRegion.country, customerRegion.provider]);
 
   const updateCartQuantity = async (item, nextQuantity) => {
     if (nextQuantity < 1) return;
@@ -348,8 +349,14 @@ export default function ProductDetails() {
     try {
       setCheckoutLoading(true);
 
+      const checkoutForm = {
+        ...form,
+        country: customerRegion.country || "US",
+        provider: customerRegion.provider || "PRINTIFY",
+      };
+
       if (paymentProvider === "COD") {
-        await storefrontApi.checkoutCod(form);
+        await storefrontApi.checkoutCod(checkoutForm);
         await refreshCart();
         setCheckoutOpen(false);
         setCartOpen(false);
@@ -359,7 +366,7 @@ export default function ProductDetails() {
       }
 
       if (paymentProvider === "RAZORPAY") {
-        const razorpayOrder = await storefrontApi.createRazorpayOrder(form);
+        const razorpayOrder = await storefrontApi.createRazorpayOrder(checkoutForm);
 
         if (!window.Razorpay) {
           showToast("error", "Payment system is not loaded. Please refresh and try again.");
@@ -376,9 +383,9 @@ export default function ProductDetails() {
           order_id: razorpayOrder.razorpayOrderId,
 
           prefill: {
-            name: form.fullName,
-            email: form.email,
-            contact: form.phone,
+            name: checkoutForm.fullName,
+            email: checkoutForm.email,
+            contact: checkoutForm.phone,
           },
 
           theme: {
@@ -418,7 +425,7 @@ export default function ProductDetails() {
       }
 
       if (paymentProvider === "PAYPAL") {
-        const paypalOrder = await storefrontApi.createPayPalOrder(form);
+        const paypalOrder = await storefrontApi.createPayPalOrder(checkoutForm);
 
         if (!paypalOrder?.approvalUrl) {
           showToast("error", "Could not start PayPal payment.");
@@ -429,8 +436,8 @@ export default function ProductDetails() {
         sessionStorage.setItem(
           "paypalCheckoutShipping",
           JSON.stringify({
-            ...form,
-            country: form.country.toUpperCase(),
+            ...checkoutForm,
+            country: checkoutForm.country.toUpperCase(),
           })
         );
 
@@ -632,7 +639,7 @@ export default function ProductDetails() {
                             );
 
                             if (firstVariantForColor) {
-                              setSelectedVariantId(firstVariantForColor.printifyVariantId);
+                              setSelectedVariantId(variantIdForRegion(firstVariantForColor, customerRegion));
                             }
                           }}
                           className={`rounded-xl border px-4 py-2 text-sm transition ${selectedColor === color

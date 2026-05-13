@@ -253,7 +253,7 @@ export default function Home() {
   const [reviewProduct, setReviewProduct] = useState(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const navigate = useNavigate();
-  const { customerRegion, changeRegion } = useCustomerRegion();
+  const { customerRegion, setCountry } = useCustomerRegion();
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -283,7 +283,7 @@ export default function Home() {
     }
 
     loadBaseHomeData();
-  }, []);
+  }, [customerRegion.country, customerRegion.provider]);
 
   useEffect(() => {
     async function loadProducts() {
@@ -310,7 +310,15 @@ export default function Home() {
 
     const timer = setTimeout(loadProducts, 250);
     return () => clearTimeout(timer);
-  }, [activeCategory, activeSubCategory, search, sortBy, refreshToken]);
+  }, [
+    activeCategory,
+    activeSubCategory,
+    search,
+    sortBy,
+    refreshToken,
+    customerRegion.country,
+    customerRegion.provider,
+  ]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -491,7 +499,27 @@ export default function Home() {
   }, [products, categoryChips]);
 
   const handleRegionChange = (countryCode) => {
-    changeRegion(countryCode);
+    if (countryCode === customerRegion.country) return;
+
+    if (cartCount > 0) {
+      showToast(
+        "error",
+        "Please checkout or clear your cart before changing country."
+      );
+      return;
+    }
+
+    setActiveCategory("all");
+    setActiveSubCategory("all");
+    setSearch("");
+    setSortBy("featured");
+
+    setProducts([]);
+    setFeaturedProducts([]);
+    setSections([]);
+
+    setCountry(countryCode);
+    setRefreshToken((prev) => prev + 1);
   };
 
   const openLogin = () => {
@@ -533,7 +561,12 @@ export default function Home() {
     }
 
     try {
-      await storefrontApi.addToCart({ productId, quantity: 1 });
+      await storefrontApi.addToCart({
+        productId,
+        quantity: 1,
+        country: customerRegion.country,
+        provider: customerRegion.provider,
+      });
       await refreshCart();
       showToast("success", "Product added to cart.");
     } catch (err) {
@@ -584,7 +617,10 @@ export default function Home() {
     try {
       const [wishlist, allProducts] = await Promise.all([
         storefrontApi.getWishlist(),
-        storefrontApi.getProducts({}),
+        storefrontApi.getProducts({
+          country: customerRegion.country,
+          provider: customerRegion.provider,
+        }),
       ]);
 
       const normalized = normalizeWishlistItems(
@@ -634,8 +670,14 @@ export default function Home() {
     try {
       setCheckoutLoading(true);
 
+      const checkoutForm = {
+        ...form,
+        country: customerRegion.country,
+        provider: customerRegion.provider,
+      };
+
       if (paymentProvider === "COD") {
-        await storefrontApi.checkoutCod(form);
+        await storefrontApi.checkoutCod(checkoutForm);
         await refreshCart();
         setCheckoutOpen(false);
         setCartOpen(false);
@@ -645,7 +687,7 @@ export default function Home() {
       }
 
       if (paymentProvider === "RAZORPAY") {
-        const razorpayOrder = await storefrontApi.createRazorpayOrder(form);
+        const razorpayOrder = await storefrontApi.createRazorpayOrder(checkoutForm);
 
         if (!window.Razorpay) {
           showToast("error", "Payment system is not loaded. Please refresh and try again.");
@@ -662,9 +704,9 @@ export default function Home() {
           order_id: razorpayOrder.razorpayOrderId,
 
           prefill: {
-            name: form.fullName,
-            email: form.email,
-            contact: form.phone,
+            name: checkoutForm.fullName,
+            email: checkoutForm.email,
+            contact: checkoutForm.phone,
           },
 
           theme: {
@@ -704,7 +746,7 @@ export default function Home() {
       }
 
       if (paymentProvider === "PAYPAL") {
-        const paypalOrder = await storefrontApi.createPayPalOrder(form);
+        const paypalOrder = await storefrontApi.createPayPalOrder(checkoutForm);
 
         if (!paypalOrder.approvalUrl) {
           showToast("error", "Could not start PayPal payment.");
@@ -715,8 +757,8 @@ export default function Home() {
         sessionStorage.setItem(
           "paypalCheckoutShipping",
           JSON.stringify({
-            ...form,
-            country: form.country.toUpperCase(),
+            ...checkoutForm,
+            country: checkoutForm.country.toUpperCase(),
           })
         );
 
@@ -742,7 +784,7 @@ export default function Home() {
     setRefreshToken((prev) => prev + 1);
 
     try {
-      const featured = await storefrontApi.getFeaturedProducts();
+      const featured = await storefrontApi.getFeaturedProducts(customerRegion);
       setFeaturedProducts(featured || []);
     } catch {
       // keep old featured products if refresh fails
@@ -1048,7 +1090,10 @@ export default function Home() {
 
           const [wishlist, allProducts] = await Promise.all([
             storefrontApi.getWishlist(),
-            storefrontApi.getProducts({}),
+            storefrontApi.getProducts({
+              country: customerRegion.country,
+              provider: customerRegion.provider,
+            }),
           ]);
 
           const normalized = normalizeWishlistItems(
