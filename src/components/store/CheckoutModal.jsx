@@ -26,11 +26,11 @@ function parseMoney(value) {
     return (
       Number(
         value.amount ??
-          value.value ??
-          value.price ??
-          value.unitPrice ??
-          value.originalUnitPrice ??
-          0
+        value.value ??
+        value.price ??
+        value.unitPrice ??
+        value.originalUnitPrice ??
+        0
       ) || 0
     );
   }
@@ -55,6 +55,50 @@ function fieldLabel(key) {
   };
 
   return labels[key] || key;
+}
+
+const SAVED_ADDRESS_PREFIX = "neonStoreSavedAddress";
+
+function savedAddressKey(country) {
+  return `${SAVED_ADDRESS_PREFIX}:${String(country || "IN").toUpperCase()}`;
+}
+
+function loadSavedAddress(country) {
+  try {
+    const raw = localStorage.getItem(savedAddressKey(country));
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+
+    if (!parsed || typeof parsed !== "object") return null;
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveAddress(country, address) {
+  try {
+    localStorage.setItem(
+      savedAddressKey(country),
+      JSON.stringify({
+        firstName: address.firstName || "",
+        lastName: address.lastName || "",
+        email: address.email || "",
+        phone: address.phone || "",
+        addressLine1: address.addressLine1 || "",
+        addressLine2: address.addressLine2 || "",
+        city: address.city || "",
+        state: address.state || "",
+        postalCode: address.postalCode || "",
+        country: String(address.country || country || "IN").toUpperCase(),
+        savedAt: new Date().toISOString(),
+      })
+    );
+  } catch {
+    // Ignore localStorage errors.
+  }
 }
 
 function FieldError({ error, children, className = "" }) {
@@ -87,12 +131,12 @@ export default function CheckoutModal({
   const availableCountries = customerRegion?.availableCountries?.length
     ? customerRegion.availableCountries
     : [
-        {
-          code: customerRegion?.country || "IN",
-          label: customerRegion?.label || "India",
-          currency: customerRegion?.currency || "INR",
-        },
-      ];
+      {
+        code: customerRegion?.country || "IN",
+        label: customerRegion?.label || "India",
+        currency: customerRegion?.currency || "INR",
+      },
+    ];
 
   const initialCountry = customerRegion?.country || availableCountries[0]?.code || "IN";
   const initialState = getStatesForCountry(initialCountry)[0]?.code || "";
@@ -111,6 +155,7 @@ export default function CheckoutModal({
   });
 
   const [errors, setErrors] = useState({});
+  const [savedAddress, setSavedAddress] = useState(null);
   const [policiesAccepted, setPoliciesAccepted] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState(
     customerRegion?.paymentProvider || "RAZORPAY"
@@ -148,9 +193,9 @@ export default function CheckoutModal({
 
     const originalPrice = parseMoney(
       item.originalUnitPrice ??
-        item.original_unit_price ??
-        item.product?.originalUnitPrice ??
-        item.variant?.originalUnitPrice
+      item.original_unit_price ??
+      item.product?.originalUnitPrice ??
+      item.variant?.originalUnitPrice
     );
 
     const originalCurrency =
@@ -165,19 +210,19 @@ export default function CheckoutModal({
 
     const unitPrice = parseMoney(
       item.unitPrice ??
-        item.unit_price ??
-        item.unitAmount ??
-        item.unit_amount ??
-        item.price ??
-        item.displayPrice ??
-        item.display_price ??
-        item.productPrice ??
-        item.product_price ??
-        item.amount ??
-        item.product?.price ??
-        item.product?.unitPrice ??
-        item.variant?.price ??
-        item.variant?.unitPrice
+      item.unit_price ??
+      item.unitAmount ??
+      item.unit_amount ??
+      item.price ??
+      item.displayPrice ??
+      item.display_price ??
+      item.productPrice ??
+      item.product_price ??
+      item.amount ??
+      item.product?.price ??
+      item.product?.unitPrice ??
+      item.variant?.price ??
+      item.variant?.unitPrice
     );
 
     const unitCurrency =
@@ -218,14 +263,22 @@ export default function CheckoutModal({
     const nextCountry = customerRegion?.country || availableCountries[0]?.code || "IN";
     const nextState = getStatesForCountry(nextCountry)[0]?.code || "";
     const nextProvider = nextCountry === "IN" ? "RAZORPAY" : "PAYPAL";
+    const address = loadSavedAddress(nextCountry);
+
+    setSavedAddress(address);
 
     setForm((prev) => ({
       ...prev,
       country: nextCountry,
-      state: nextState,
-      city: "",
-      phone: "",
-      postalCode: "",
+      state: address?.state || nextState,
+      firstName: address?.firstName || prev.firstName || "",
+      lastName: address?.lastName || prev.lastName || "",
+      email: address?.email || prev.email || "",
+      phone: address?.phone || "",
+      addressLine1: address?.addressLine1 || "",
+      addressLine2: address?.addressLine2 || "",
+      city: address?.city || "",
+      postalCode: address?.postalCode || "",
     }));
 
     setPaymentProvider(nextProvider);
@@ -308,6 +361,9 @@ export default function CheckoutModal({
 
     const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
 
+    saveAddress(form.country, form);
+    setSavedAddress(form);
+
     onSubmit(
       {
         ...form,
@@ -367,6 +423,54 @@ export default function CheckoutModal({
                 <ErrorBox message={errors.cart} />
                 <ErrorBox message={errors.policy} />
                 <ErrorBox message={errors.payment} />
+
+                {savedAddress ? (
+                  <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-green-100">
+                          Saved address available
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-zinc-300">
+                          {savedAddress.firstName} {savedAddress.lastName} ·{" "}
+                          {savedAddress.addressLine1}, {savedAddress.city},{" "}
+                          {savedAddress.state} {savedAddress.postalCode}
+                        </p>
+                      </div>
+
+                      <div className="flex shrink-0 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-2xl"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              ...savedAddress,
+                              country: form.country,
+                            }));
+
+                            setErrors({});
+                          }}
+                        >
+                          Use saved address
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-2xl"
+                          onClick={() => {
+                            localStorage.removeItem(savedAddressKey(form.country));
+                            setSavedAddress(null);
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FieldError error={errors.firstName}>
@@ -544,11 +648,10 @@ export default function CheckoutModal({
                             setPaymentProvider("RAZORPAY");
                             setErrors((prev) => ({ ...prev, payment: "" }));
                           }}
-                          className={`rounded-2xl border p-4 text-left transition ${
-                            paymentProvider === "RAZORPAY"
-                              ? "border-green-400 bg-green-500/10 text-green-100"
-                              : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
-                          }`}
+                          className={`rounded-2xl border p-4 text-left transition ${paymentProvider === "RAZORPAY"
+                            ? "border-green-400 bg-green-500/10 text-green-100"
+                            : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                            }`}
                         >
                           <p className="font-semibold">Razorpay</p>
                           <p className="mt-1 text-xs text-zinc-400">
@@ -562,11 +665,10 @@ export default function CheckoutModal({
                             setPaymentProvider("COD");
                             setErrors((prev) => ({ ...prev, payment: "" }));
                           }}
-                          className={`rounded-2xl border p-4 text-left transition ${
-                            paymentProvider === "COD"
-                              ? "border-green-400 bg-green-500/10 text-green-100"
-                              : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
-                          }`}
+                          className={`rounded-2xl border p-4 text-left transition ${paymentProvider === "COD"
+                            ? "border-green-400 bg-green-500/10 text-green-100"
+                            : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                            }`}
                         >
                           <p className="font-semibold">Cash on Delivery</p>
                           <p className="mt-1 text-xs text-zinc-400">
@@ -627,8 +729,8 @@ export default function CheckoutModal({
                   {loading
                     ? "Processing..."
                     : paymentProvider === "COD"
-                    ? "Place COD Order"
-                    : `Pay ${formatCheckoutMoney(totalPayable)}`}
+                      ? "Place COD Order"
+                      : `Pay ${formatCheckoutMoney(totalPayable)}`}
                 </Button>
               </div>
             </div>
