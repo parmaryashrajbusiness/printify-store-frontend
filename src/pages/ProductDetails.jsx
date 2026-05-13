@@ -68,6 +68,28 @@ function normalizeCartResponse(cart) {
   return [];
 }
 
+function variantIdForRegion(variant, customerRegion) {
+  const provider = String(customerRegion?.provider || "").toUpperCase();
+
+  if (provider === "QIKINK") {
+    return (
+      variant?.qikinkSku ||
+      variant?.providerSku ||
+      variant?.sku ||
+      variant?.printifyVariantId ||
+      variant?.id ||
+      ""
+    );
+  }
+
+  return (
+    variant?.printifyVariantId ||
+    variant?.providerVariantId ||
+    variant?.id ||
+    ""
+  );
+}
+
 export default function ProductDetails() {
   const { user, isAuthenticated, logout } = useAuth();
   const { customerRegion } = useCustomerRegion();
@@ -134,7 +156,7 @@ export default function ProductDetails() {
     if (!product?.variants?.length) return null;
 
     return (
-      product.variants.find((variant) => variant.printifyVariantId === selectedVariantId) ||
+      product.variants.find((variant) => variantIdForRegion(variant, customerRegion) === selectedVariantId) ||
       product.variants.find((variant) => variant.enabled) ||
       product.variants[0]
     );
@@ -203,7 +225,7 @@ export default function ProductDetails() {
       try {
         setLoading(true);
 
-        const data = await storefrontApi.getProductBySlug(slug);
+        const data = await storefrontApi.getProductBySlug(slug, customerRegion);
         setProduct(data);
 
         const firstVariantId =
@@ -226,7 +248,7 @@ export default function ProductDetails() {
 
         const [similar, productReviews] = await Promise.all([
           storefrontApi.getSimilarProducts
-            ? storefrontApi.getSimilarProducts(id).catch(() => [])
+            ? storefrontApi.getSimilarProducts(id, customerRegion).catch(() => [])
             : Promise.resolve([]),
           storefrontApi.getProductReviews(id).catch(() => []),
         ]);
@@ -291,7 +313,11 @@ export default function ProductDetails() {
     try {
       await storefrontApi.addToCart({
         productId,
-        variantId: selectedVariant?.printifyVariantId || product.defaultVariantId,
+        variantId:
+          variantIdForRegion(selectedVariant, customerRegion) ||
+          product.defaultVariantId,
+        country: customerRegion.country,
+        provider: customerRegion.provider,
         quantity,
       });
 
@@ -321,6 +347,16 @@ export default function ProductDetails() {
   const handleCheckoutSubmit = async (form, paymentProvider) => {
     try {
       setCheckoutLoading(true);
+
+      if (paymentProvider === "COD") {
+        await storefrontApi.checkoutCod(form);
+        await refreshCart();
+        setCheckoutOpen(false);
+        setCartOpen(false);
+        showToast("success", "COD order placed successfully.");
+        setCheckoutLoading(false);
+        return;
+      }
 
       if (paymentProvider === "RAZORPAY") {
         const razorpayOrder = await storefrontApi.createRazorpayOrder(form);
@@ -617,10 +653,10 @@ export default function ProductDetails() {
                   <div className="flex flex-wrap gap-2">
                     {sizeVariants.map((variant) => (
                       <button
-                        key={variant.printifyVariantId}
+                        key={variantIdForRegion(variant, customerRegion)}
                         type="button"
-                        onClick={() => setSelectedVariantId(variant.printifyVariantId)}
-                        className={`rounded-xl border px-4 py-2 text-sm transition ${selectedVariantId === variant.printifyVariantId
+                        onClick={() => setSelectedVariantId(variantIdForRegion(variant, customerRegion))}
+                        className={`rounded-xl border px-4 py-2 text-sm transition ${selectedVariantId === variantIdForRegion(variant, customerRegion)
                           ? "border-green-400 bg-green-500 text-black"
                           : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
                           }`}

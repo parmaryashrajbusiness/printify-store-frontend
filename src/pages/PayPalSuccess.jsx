@@ -20,7 +20,16 @@ export default function PayPalSuccess() {
           throw new Error("PayPal order token missing.");
         }
 
-        await storefrontApi.capturePayPalOrder({ paypalOrderId });
+        const savedShipping = JSON.parse(
+          sessionStorage.getItem("paypalCheckoutShipping") || "{}"
+        );
+
+        await storefrontApi.capturePayPalOrder({
+          paypalOrderId,
+          shipping: savedShipping,
+        });
+
+        sessionStorage.removeItem("paypalCheckoutShipping");
 
         sessionStorage.removeItem("paypalCheckoutShipping");
 

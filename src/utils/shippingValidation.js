@@ -140,23 +140,38 @@ export const checkoutCountries = {
   // FR: { ... },
 };
 
-export const allowedCountries = [checkoutCountries.IN].map((country) => ({
-  code: country.code,
-  label: country.label,
-  phoneDigits: country.phoneDigits,
-  postalLength: country.postalLength,
-}));
+export function getAllowedCountries(providerStatus = null) {
+  const mode = String(providerStatus?.mode || "").toUpperCase();
+  const qikinkEnabled = providerStatus?.qikinkEnabled !== false;
+  const printifyEnabled = Boolean(providerStatus?.printifyEnabled);
 
-/*
-Future Printify restore:
+  if (mode === "QIKINK" || (qikinkEnabled && !printifyEnabled)) {
+    return [checkoutCountries.IN].map(toCountryOption);
+  }
 
-export const allowedCountries = Object.values(checkoutCountries).map((country) => ({
-  code: country.code,
-  label: country.label,
-  phoneDigits: country.phoneDigits,
-  postalLength: country.postalLength,
-}));
-*/
+  if (mode === "PRINTIFY" || (!qikinkEnabled && printifyEnabled)) {
+    return [checkoutCountries.US, checkoutCountries.AU].map(toCountryOption);
+  }
+
+  const countries = [];
+
+  if (qikinkEnabled) countries.push(checkoutCountries.IN);
+  if (printifyEnabled) countries.push(checkoutCountries.US, checkoutCountries.AU);
+
+  return countries.length ? countries.map(toCountryOption) : [checkoutCountries.IN].map(toCountryOption);
+}
+
+function toCountryOption(country) {
+  return {
+    code: country.code,
+    label: country.label,
+    phoneDigits: country.phoneDigits,
+    postalLength: country.postalLength,
+    currency: country.currency,
+  };
+}
+
+export const allowedCountries = Object.values(checkoutCountries).map(toCountryOption);
 
 export function getCountryConfig(countryCode) {
   return checkoutCountries[countryCode] || checkoutCountries.IN;

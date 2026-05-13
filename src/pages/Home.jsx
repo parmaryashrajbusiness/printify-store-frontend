@@ -271,8 +271,8 @@ export default function Home() {
       try {
         setStoreError("");
         const [homeData, featured] = await Promise.all([
-          storefrontApi.getHomeSections(),
-          storefrontApi.getFeaturedProducts(),
+          storefrontApi.getHomeSections(customerRegion),
+          storefrontApi.getFeaturedProducts(customerRegion)
         ]);
 
         setSections(homeData?.sections || []);
@@ -296,6 +296,8 @@ export default function Home() {
           subCategory: activeSubCategory,
           search,
           sort: sortBy,
+          country: customerRegion.country,
+          provider: customerRegion.provider,
         });
 
         setProducts(Array.isArray(data) ? data : []);
@@ -631,6 +633,16 @@ export default function Home() {
   const handleCheckoutSubmit = async (form, paymentProvider) => {
     try {
       setCheckoutLoading(true);
+
+      if (paymentProvider === "COD") {
+        await storefrontApi.checkoutCod(form);
+        await refreshCart();
+        setCheckoutOpen(false);
+        setCartOpen(false);
+        showToast("success", "COD order placed successfully.");
+        setCheckoutLoading(false);
+        return;
+      }
 
       if (paymentProvider === "RAZORPAY") {
         const razorpayOrder = await storefrontApi.createRazorpayOrder(form);
@@ -1091,30 +1103,10 @@ function SiteHeader({
   onRegionChange,
 }) {
 
-  const regionOptions = [
-    {
-      value: "IN",
-      label: "India · INR",
-    },
-    {
-      value: "US",
-      label: "United States · USD",
-    },
-    {
-      value: "AU",
-      label: "Australia · AUD",
-    },
-
-    // Temporarily disabled until GPSR/EU compliance is ready
-    // {
-    //   value: "DE",
-    //   label: "Germany · EUR",
-    // },
-    // {
-    //   value: "FR",
-    //   label: "France · EUR",
-    // },
-  ];
+  const regionOptions = (customerRegion?.availableCountries || []).map((country) => ({
+    value: country.code,
+    label: `${country.label} · ${country.currency}`,
+  }));
 
   return (
     <>
@@ -1158,13 +1150,19 @@ function SiteHeader({
             </button>
 
             <div className="w-[170px]">
-              <SelectField
-                value={customerRegion?.country || "IN"}
-                onChange={(value) => onRegionChange(value)}
-                options={regionOptions}
-                placeholder="Country"
-                size="sm"
-              />
+              {customerRegion?.regionLocked ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300">
+                  {customerRegion.label} · {customerRegion.currency}
+                </div>
+              ) : (
+                <SelectField
+                  value={customerRegion.country}
+                  onChange={(value) => onRegionChange(value)}
+                  options={regionOptions}
+                  placeholder="Country"
+                  size="sm"
+                />
+              )}
             </div>
 
             <button
@@ -1275,14 +1273,19 @@ function SiteHeader({
                   <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-green-300">
                     Country / Currency
                   </p>
-
-                  <SelectField
-                    value={customerRegion?.country || "IN"}
-                    onChange={(value) => onRegionChange(value)}
-                    options={regionOptions}
-                    placeholder="Country"
-                    size="sm"
-                  />
+                  {customerRegion?.regionLocked ? (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300">
+                      {customerRegion.label} · {customerRegion.currency}
+                    </div>
+                  ) : (
+                    <SelectField
+                      value={customerRegion.country}
+                      onChange={(value) => onRegionChange(value)}
+                      options={regionOptions}
+                      placeholder="Country"
+                      size="sm"
+                    />
+                  )}
                 </div>
 
                 {user ? (
