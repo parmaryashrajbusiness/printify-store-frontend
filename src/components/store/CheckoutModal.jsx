@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { ChevronDown, ShieldCheck, Truck, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -157,6 +157,7 @@ export default function CheckoutModal({
   const [errors, setErrors] = useState({});
   const [savedAddress, setSavedAddress] = useState(null);
   const [policiesAccepted, setPoliciesAccepted] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState(
     customerRegion?.paymentProvider || "RAZORPAY"
   );
@@ -183,10 +184,12 @@ export default function CheckoutModal({
     : ["PAYPAL"];
 
   const shippingFeeByCountry = {
-    IN: 149,
-    US: 6.99,
-    AU: 10.99,
+    US: Number(import.meta.env.VITE_SHIPPING_USD ?? 6.99),
+    AU: Number(import.meta.env.VITE_SHIPPING_AUD ?? 10.99),
   };
+
+  const prepaidShippingInr = Number(import.meta.env.VITE_PREPAID_SHIPPING_INR ?? 0);
+  const codShippingInr = Number(import.meta.env.VITE_COD_SHIPPING_INR ?? 79);
 
   const getCartItemPrice = (item) => {
     const targetCurrency = currency;
@@ -245,7 +248,17 @@ export default function CheckoutModal({
   }, 0);
 
   const hasCartItems = cartItems.length > 0;
-  const shippingFee = shippingFeeByCountry[form.country] ?? 0;
+
+  const isIndiaQikink =
+    form.country === "IN" &&
+    String(customerRegion?.provider || "").toUpperCase() === "QIKINK";
+
+  const shippingFee = isIndiaQikink
+    ? paymentProvider === "COD"
+      ? codShippingInr
+      : prepaidShippingInr
+    : shippingFeeByCountry[form.country] ?? 0;
+
   const internationalFeePercent = form.country === "IN" ? 0 : 7;
   const feeBuffer = Number(((productSubtotal + shippingFee) * internationalFeePercent) / 100);
   const totalPayable = productSubtotal + shippingFee + feeBuffer;
@@ -394,7 +407,7 @@ export default function CheckoutModal({
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
-            className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#070907] p-6 text-white shadow-2xl"
+            className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#070907] p-5 text-white shadow-2xl sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -418,7 +431,7 @@ export default function CheckoutModal({
               </button>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_380px]">
               <div className="space-y-4">
                 <ErrorBox message={errors.cart} />
                 <ErrorBox message={errors.policy} />
@@ -602,7 +615,7 @@ export default function CheckoutModal({
                 </FieldError>
               </div>
 
-              <div className="space-y-4 rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+              <div className="space-y-4 rounded-[28px] border border-white/10 bg-white/[0.04] p-5 lg:sticky lg:top-6 lg:self-start">
                 <div>
                   <h3 className="text-lg font-semibold">Order Summary</h3>
                   <p className="mt-1 text-sm text-zinc-400">
@@ -618,7 +631,7 @@ export default function CheckoutModal({
 
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Shipping estimate</span>
-                    <span>{formatCheckoutMoney(shippingFee)}</span>
+                    <span>{shippingFee === 0 ? "Free" : formatCheckoutMoney(shippingFee)}</span>
                   </div>
 
                   {feeBuffer > 0 ? (
@@ -637,6 +650,17 @@ export default function CheckoutModal({
                 </div>
 
                 <div>
+                  {isIndiaQikink ? (
+                    <div className="mb-4 rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs leading-5 text-green-100">
+                      <div className="flex items-start gap-2">
+                        <Truck className="mt-0.5 h-4 w-4 shrink-0 text-green-300" />
+                        <p>
+                          Pay online with Razorpay and get <span className="font-semibold">free delivery</span>.
+                          COD includes a small delivery charge.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
                   <p className="mb-3 text-sm font-medium">Payment Method</p>
 
                   <div className="grid gap-3">
@@ -657,6 +681,9 @@ export default function CheckoutModal({
                           <p className="mt-1 text-xs text-zinc-400">
                             UPI, cards, net banking
                           </p>
+                          <p className="mt-2 inline-flex rounded-full bg-green-500/15 px-3 py-1 text-xs font-semibold text-green-300">
+                            Free delivery on prepaid orders
+                          </p>
                         </button>
 
                         <button
@@ -673,6 +700,9 @@ export default function CheckoutModal({
                           <p className="font-semibold">Cash on Delivery</p>
                           <p className="mt-1 text-xs text-zinc-400">
                             Available only for India/Qikink orders
+                          </p>
+                          <p className="mt-2 text-xs text-yellow-300">
+                            COD includes {formatCheckoutMoney(codShippingInr)} delivery charge
                           </p>
                         </button>
                       </>
@@ -694,18 +724,65 @@ export default function CheckoutModal({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-xs leading-6 text-yellow-50">
-                  <p className="font-semibold">Important made-to-order policy</p>
-                  <p className="mt-2">
-                    Every product is printed specially after you place the order. We
-                    cannot accept returns, exchanges, or cancellations for wrong size,
-                    wrong color, change of mind, incorrect address, or customer ordering
-                    mistakes.
-                  </p>
-                  <p className="mt-2">
-                    Damaged, defective, misprinted, or incorrect items must be reported
-                    with order ID and clear photo/video proof.
-                  </p>
+                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-xs leading-5 text-yellow-50">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
+
+                    <div className="min-w-0">
+                      <p className="font-semibold">Made-to-order policy</p>
+                      <p className="mt-1 text-yellow-100/90">
+                        Custom printed after order confirmation. No returns for size, color,
+                        address mistakes, delivery refusal, or change of mind.
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => setPolicyOpen((prev) => !prev)}
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-yellow-300 transition hover:text-yellow-200"
+                      >
+                        {policyOpen ? "Hide full policy" : "Read full policy"}
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 transition-transform ${policyOpen ? "rotate-180" : ""
+                            }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence initial={false}>
+                    {policyOpen ? (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-3 space-y-2 border-t border-yellow-500/20 pt-3 text-yellow-100/90">
+                          <p>Every product is printed specially after you place the order.</p>
+
+                          <p>
+                            Returns or exchanges are not accepted for wrong size selected by the
+                            customer, wrong color selected by the customer, change of mind,
+                            incorrect address, delivery refusal, or ordering mistakes.
+                          </p>
+
+                          <p>
+                            If your item arrives damaged, defective, misprinted, or different
+                            from what you ordered, contact us within 24 hours of delivery with
+                            your order ID and clear photo/video proof. After verification, we
+                            will provide a replacement or suitable resolution.
+                          </p>
+
+                          <p>
+                            For COD orders, delivery/COD charges are non-refundable. Approved
+                            COD refunds will be processed manually through UPI or bank transfer
+                            after verification.
+                          </p>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </div>
 
                 <label className="flex items-start gap-3 text-xs leading-6 text-zinc-300">
@@ -719,9 +796,8 @@ export default function CheckoutModal({
                     className="mt-1"
                   />
                   <span>
-                    I confirm that I checked product, size, color, quantity, and shipping
-                    address. I understand this is a made-to-order product and the
-                    applicable India/global return policy applies.
+                    I checked product, size, color, quantity, and shipping address. I accept the
+                    made-to-order and refund policy.
                   </span>
                 </label>
 

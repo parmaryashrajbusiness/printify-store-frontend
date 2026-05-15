@@ -46,6 +46,41 @@ function getImages(product) {
   return [...new Set(images.filter(Boolean))];
 }
 
+function getVariantImages(variant) {
+  const images = [];
+
+  if (Array.isArray(variant?.images)) images.push(...variant.images);
+  if (Array.isArray(variant?.imageUrls)) images.push(...variant.imageUrls);
+
+  // Multiple Qikink mockups for same color
+  if (Array.isArray(variant?.qikinkMockupLinks)) {
+    images.push(...variant.qikinkMockupLinks);
+  }
+
+  if (variant?.imageUrl) images.push(variant.imageUrl);
+  if (variant?.image) images.push(variant.image);
+
+  // Single Qikink/mockup fields
+  if (variant?.qikinkMockupLink) images.push(variant.qikinkMockupLink);
+  if (variant?.qikinkMockupUrl) images.push(variant.qikinkMockupUrl);
+  if (variant?.mockupLink) images.push(variant.mockupLink);
+  if (variant?.mockupUrl) images.push(variant.mockupUrl);
+  if (variant?.mockup_url) images.push(variant.mockup_url);
+  if (variant?.mockup_link) images.push(variant.mockup_link);
+
+  return [...new Set(images.filter(Boolean))];
+}
+
+function getDisplayImages(product, selectedVariant) {
+  const variantImages = getVariantImages(selectedVariant);
+
+  if (variantImages.length > 0) {
+    return variantImages;
+  }
+
+  return getImages(product);
+}
+
 function ratingOf(product) {
   return Number(product?.ratingAverage ?? product?.averageRating ?? product?.rating ?? 0);
 }
@@ -136,7 +171,6 @@ export default function ProductDetails() {
     y: 50,
   });
 
-  const images = useMemo(() => getImages(product), [product]);
   const productId = productIdOf(product);
 
   const availableColors = useMemo(() => {
@@ -160,7 +194,29 @@ export default function ProductDetails() {
       product.variants.find((variant) => variant.enabled) ||
       product.variants[0]
     );
-  }, [product, selectedVariantId]);
+  }, [product, selectedVariantId, customerRegion]);
+
+  const images = useMemo(
+    () => getDisplayImages(product, selectedVariant),
+    [product, selectedVariant]
+  );
+
+  useEffect(() => {
+    if (!selectedVariant) return;
+
+    const variantImages = getVariantImages(selectedVariant);
+
+    if (variantImages.length > 0) {
+      setActiveImage(variantImages[0]);
+      return;
+    }
+
+    const fallbackImages = getImages(product);
+
+    if (fallbackImages.length > 0) {
+      setActiveImage(fallbackImages[0]);
+    }
+  }, [selectedVariant, product]);
 
   const sizeVariants = useMemo(() => {
     if (!product?.variants?.length) return [];
@@ -640,6 +696,12 @@ export default function ProductDetails() {
 
                             if (firstVariantForColor) {
                               setSelectedVariantId(variantIdForRegion(firstVariantForColor, customerRegion));
+
+                              const variantImages = getVariantImages(firstVariantForColor);
+
+                              if (variantImages.length > 0) {
+                                setActiveImage(variantImages[0]);
+                              }
                             }
                           }}
                           className={`rounded-xl border px-4 py-2 text-sm transition ${selectedColor === color
@@ -662,7 +724,15 @@ export default function ProductDetails() {
                       <button
                         key={variantIdForRegion(variant, customerRegion)}
                         type="button"
-                        onClick={() => setSelectedVariantId(variantIdForRegion(variant, customerRegion))}
+                        onClick={() => {
+                          setSelectedVariantId(variantIdForRegion(variant, customerRegion));
+
+                          const variantImages = getVariantImages(variant);
+
+                          if (variantImages.length > 0) {
+                            setActiveImage(variantImages[0]);
+                          }
+                        }}
                         className={`rounded-xl border px-4 py-2 text-sm transition ${selectedVariantId === variantIdForRegion(variant, customerRegion)
                           ? "border-green-400 bg-green-500 text-black"
                           : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
