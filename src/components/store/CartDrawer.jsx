@@ -5,6 +5,8 @@ import Button from "@/components/ui/Button";
 import { formatMoney } from "@/utils/currency";
 import { getCartDisplayPricing } from "@/utils/displayPricing";
 
+const MAX_QUANTITY_PER_VARIANT = 5;
+
 export default function CartDrawer({
   open,
   onClose,
@@ -84,7 +86,7 @@ export default function CartDrawer({
                           <img
                             src={item.imageUrl}
                             alt={item.productName}
-                            className="h-24 w-24 rounded-2xl object-cover"
+                            className="h-24 w-24 shrink-0 rounded-2xl object-cover sm:h-28 sm:w-28"
                           />
 
                           <div className="min-w-0 flex-1">
@@ -104,35 +106,49 @@ export default function CartDrawer({
                               </button>
                             </div>
 
-                            <div className="mt-4 flex items-center justify-between">
-                              <div className="flex items-center rounded-full border border-white/10 bg-black/30">
-                                <button
-                                  onClick={() => onDecrease(item)}
-                                  className="grid h-9 w-9 place-items-center text-zinc-300 hover:text-white"
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </button>
+                            <div className="mt-4 space-y-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center rounded-full border border-white/10 bg-black/30">
+                                  <button
+                                    type="button"
+                                    disabled={Number(item.quantity || 1) <= 1}
+                                    onClick={() => onDecrease(item)}
+                                    className="grid h-9 w-9 place-items-center text-zinc-300 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-zinc-300"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </button>
 
-                                <span className="min-w-8 text-center text-sm font-semibold">
-                                  {item.quantity}
-                                </span>
+                                  <span className="min-w-8 text-center text-sm font-semibold">
+                                    {item.quantity}
+                                  </span>
 
-                                <button
-                                  onClick={() => onIncrease(item)}
-                                  className="grid h-9 w-9 place-items-center text-zinc-300 hover:text-white"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </button>
+                                  <button
+                                    type="button"
+                                    disabled={Number(item.quantity || 1) >= MAX_QUANTITY_PER_VARIANT}
+                                    onClick={() => onIncrease(item)}
+                                    className="grid h-9 w-9 place-items-center text-zinc-300 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-zinc-300"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </button>
+                                </div>
+
+                                <div className="shrink-0 text-right">
+                                  <p className="text-xs text-zinc-500">
+                                    {formatMoney(pricing.unitPrice, pricing.displayCurrency)} each
+                                  </p>
+                                  <p className="text-lg font-semibold leading-tight">
+                                    {formatMoney(pricing.lineTotal, pricing.displayCurrency)}
+                                  </p>
+                                </div>
                               </div>
 
-                              <div className="text-right">
-                                <p className="text-sm text-zinc-500">
-                                  {formatMoney(pricing.unitPrice, pricing.displayCurrency)} each
-                                </p>
-                                <p className="font-semibold">
-                                  {formatMoney(pricing.lineTotal, pricing.displayCurrency)}
-                                </p>
-                              </div>
+                              {Number(item.quantity || 1) >= MAX_QUANTITY_PER_VARIANT ? (
+                                <div className="inline-flex rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-[11px] font-medium text-yellow-200">
+                                  Maximum {MAX_QUANTITY_PER_VARIANT} per size/color
+                                </div>
+                              ) : null}
                             </div>
                           </div>
                         </div>

@@ -31,6 +31,8 @@ import CheckoutModal from "@/components/store/CheckoutModal";
 import neonLogo from "@/assets/neon-logo.png";
 import AuthModal from "@/components/auth/AuthModal";
 
+const MAX_QUANTITY_PER_VARIANT = 5;
+
 function productIdOf(product) {
   return product?.id || product?._id;
 }
@@ -244,14 +246,16 @@ export default function ProductDetails() {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const refreshCart = async () => {
+  const refreshCart = async ({ silent = false } = {}) => {
     if (!isAuthenticated) {
       setCartItems([]);
       return [];
     }
 
     try {
-      setCartLoading(true);
+      if (!silent) {
+        setCartLoading(true);
+      }
 
       const cart = await storefrontApi.getCart();
       const safeCart = normalizeCartResponse(cart);
@@ -264,7 +268,9 @@ export default function ProductDetails() {
       showToast("error", "Could not load cart.");
       return [];
     } finally {
-      setCartLoading(false);
+      if (!silent) {
+        setCartLoading(false);
+      }
     }
   };
 
@@ -326,23 +332,44 @@ export default function ProductDetails() {
   const updateCartQuantity = async (item, nextQuantity) => {
     if (nextQuantity < 1) return;
 
+    if (nextQuantity > MAX_QUANTITY_PER_VARIANT) {
+      showToast("error", `Maximum ${MAX_QUANTITY_PER_VARIANT} pieces per size/color.`);
+      return;
+    }
+
+    const previousCartItems = cartItems;
+
+    setCartItems((items) =>
+      items.map((cartItem) =>
+        cartItem.id === item.id
+          ? { ...cartItem, quantity: nextQuantity }
+          : cartItem
+      )
+    );
+
     try {
       await storefrontApi.updateCartItem(item.id, nextQuantity);
-      await refreshCart();
+      await refreshCart({ silent: true });
     } catch (err) {
       console.error(err);
-      showToast("error", "Failed to update cart.");
+      setCartItems(previousCartItems);
+      showToast("error", err.message || "Failed to update cart.");
     }
   };
 
   const removeCartItem = async (id) => {
+    const previousCartItems = cartItems;
+
+    setCartItems((items) => items.filter((item) => item.id !== id));
+
     try {
       await storefrontApi.removeCartItem(id);
-      await refreshCart();
+      await refreshCart({ silent: true });
       showToast("success", "Item removed from cart.");
     } catch (err) {
       console.error(err);
-      showToast("error", "Failed to remove item.");
+      setCartItems(previousCartItems);
+      showToast("error", err.message || "Failed to remove item.");
     }
   };
 
@@ -358,6 +385,8 @@ export default function ProductDetails() {
 
   const addToCart = async () => {
     if (!isAuthenticated) {
+      setAuthMode("login");
+      setAuthModalOpen(true);
       showToast("error", "Please login to add product to cart.");
       return;
     }
@@ -371,6 +400,9 @@ export default function ProductDetails() {
       await storefrontApi.addToCart({
         productId,
         variantId:
+          selectedVariant?.variantId ||
+          selectedVariant?.printifyVariantId ||
+          selectedVariant?.qikinkCatalogSku ||
           variantIdForRegion(selectedVariant, customerRegion) ||
           product.defaultVariantId,
         country: customerRegion.country,
@@ -766,13 +798,19 @@ export default function ProductDetails() {
 
                   <button
                     type="button"
-                    onClick={() => setQuantity((prev) => Math.min(10, prev + 1))}
-                    className="grid h-12 w-12 place-items-center rounded-r-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                    disabled={quantity >= MAX_QUANTITY_PER_VARIANT}
+                    onClick={() => setQuantity((prev) => Math.min(MAX_QUANTITY_PER_VARIANT, prev + 1))}
+                    className="grid h-12 w-12 place-items-center rounded-r-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-300"
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
+                {quantity >= MAX_QUANTITY_PER_VARIANT ? (
+                  <p className="text-right text-xs text-yellow-300">
+                    Maximum {MAX_QUANTITY_PER_VARIANT} pieces per size/color
+                  </p>
+                ) : null}
               </div>
 
               <Button
@@ -824,8 +862,8 @@ export default function ProductDetails() {
         onClose={() => setCartOpen(false)}
         items={cartItems}
         loading={cartLoading}
-        onIncrease={(item) => updateCartQuantity(item, item.quantity + 1)}
-        onDecrease={(item) => updateCartQuantity(item, item.quantity - 1)}
+        onIncrease={(item) => updateCartQuantity(item, Number(item.quantity || 1) + 1)}
+        onDecrease={(item) => updateCartQuantity(item, Number(item.quantity || 1) - 1)}
         onRemove={removeCartItem}
         onCheckout={async () => {
           const latestCart = await refreshCart();
