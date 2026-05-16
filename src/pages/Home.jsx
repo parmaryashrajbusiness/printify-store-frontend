@@ -812,7 +812,7 @@ export default function Home() {
         onRegionChange={handleRegionChange}
       />
 
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10 pt-[104px] sm:pt-20">
         <HeroSection
           stats={stats}
           onPrimaryAction={() =>
@@ -825,14 +825,14 @@ export default function Home() {
 
         <BrandStrip />
 
-        <section id="featured" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section id="featured" className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
           <SectionHeading
             eyebrow="Top Picks"
             title="Most popular products right now"
             subtitle="Based on real user activity and ratings."
           />
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
             {topPickProducts.map((product) => (
               <ProductCard
                 key={productIdOf(product)}
@@ -848,14 +848,14 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="shop" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <section id="shop" className="mx-auto max-w-7xl px-3 py-7 sm:px-6 sm:py-10 lg:px-8">
           <SectionHeading
             eyebrow="Shop by Category"
             title="Browse products made for your style"
             subtitle="Explore products by category, filter by design, and review the final price before secure checkout."
           />
 
-          <div className="mb-8 rounded-[32px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl md:p-5">
+          <div className="mb-5 rounded-3xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl sm:mb-8 sm:p-4 md:p-5">
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
@@ -864,7 +864,7 @@ export default function Home() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search T-shirts, mugs, stickers, coding designs..."
-                  className="h-14 rounded-2xl border border-white/10 bg-black/40 pl-12 pr-4 text-base text-white placeholder:text-zinc-500"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 pl-11 pr-4 text-sm text-white placeholder:text-zinc-500 sm:h-14 sm:pl-12 sm:text-base"
                 />
               </div>
 
@@ -872,19 +872,19 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setShowFilters((prev) => !prev)}
-                  className="inline-flex h-14 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 text-sm text-zinc-200 transition hover:bg-white/10"
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-xs text-zinc-200 transition hover:bg-white/10 sm:h-14 sm:flex-none sm:px-5 sm:text-sm"
                 >
                   <Filter className="h-4 w-4" />
                   Design Filters
                 </button>
 
-                <div className="flex h-14 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4">
+                <div className="flex h-11 flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 sm:h-14 sm:flex-none sm:px-4">
                   <SlidersHorizontal className="h-4 w-4 text-zinc-400" />
 
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent text-sm text-zinc-200 outline-none"
+                    className="w-full bg-transparent text-xs text-zinc-200 outline-none sm:w-auto sm:text-sm"
                   >
                     <option className="bg-black" value="featured">
                       Featured
@@ -903,7 +903,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
+            <div className="mt-4 flex snap-x gap-2 overflow-x-auto pb-1 sm:mt-5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -911,7 +911,7 @@ export default function Home() {
                   setActiveSubCategory("all");
                   document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className={`shrink-0 rounded-2xl border px-4 py-3 text-sm transition ${activeCategory === "all"
+                className={`shrink-0 snap-start rounded-2xl border px-3 py-2 text-xs transition sm:px-4 sm:py-3 sm:text-sm ${activeCategory === "all"
                   ? "border-green-400/70 bg-green-400 text-black"
                   : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
                   }`}
@@ -929,7 +929,7 @@ export default function Home() {
                     setActiveSubCategory("all");
                     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className={`shrink-0 rounded-2xl border px-4 py-3 text-sm transition ${activeCategory === section.id
+                  className={`shrink-0 snap-start rounded-2xl border px-3 py-2 text-xs transition sm:px-4 sm:py-3 sm:text-sm ${activeCategory === section.id
                     ? "border-green-400/70 bg-green-400 text-black"
                     : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
                     }`}
@@ -976,13 +976,13 @@ export default function Home() {
             </AnimatePresence>
           </div>
 
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-5 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm text-zinc-400">
                 Showing {visibleProducts.length} of {products.length} products
               </p>
 
-              <h3 className="mt-1 text-2xl font-semibold text-white">
+              <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">
                 {activeCategory === "all"
                   ? "Shop all categories"
                   : categoryChips.find((c) => c.id === activeCategory)?.label || "Products"}
@@ -1012,7 +1012,7 @@ export default function Home() {
               subtitle="Try another keyword, category, or design filter."
             />
           ) : (
-            <div className="space-y-14">
+            <div className="space-y-8 sm:space-y-14">
               {productSections.map((section) => (
                 <ProductSection
                   key={section.id}
@@ -1031,7 +1031,7 @@ export default function Home() {
 
         <ContactSection showToast={showToast} />
 
-        <section id="about" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section id="about" className="mx-auto max-w-7xl px-3 py-10 sm:px-6 sm:py-16 lg:px-8">
           <SectionHeading
             eyebrow="Why Choose Us"
             title="Built for real orders, genuine reviews, and a seamless shopping experience."
@@ -1156,9 +1156,9 @@ function SiteHeader({
   return (
     <>
       <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
           <a href="#home" className="flex items-center gap-3">
-            <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
+            <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-black ring-1 ring-white/10 sm:h-14 sm:w-14">
               <img
                 src={neonLogo}
                 alt="Neon Store logo"
@@ -1167,8 +1167,8 @@ function SiteHeader({
             </div>
 
             <div>
-              <p className="text-lg font-semibold tracking-wide">NeonStore</p>
-              <p className="text-xs text-zinc-400">Wear what stands out</p>
+              <p className="text-base font-semibold tracking-wide sm:text-lg">NeonStore</p>
+              <p className="text-[11px] text-zinc-400 sm:text-xs">Wear what stands out</p>
             </div>
           </a>
 
@@ -1253,11 +1253,11 @@ function SiteHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-1.5 md:hidden">
 
             <button
               onClick={onWishlistOpen}
-              className="relative rounded-2xl border border-white/10 bg-white/5 p-3 text-zinc-200"
+              className="relative rounded-2xl border border-white/10 bg-white/5 p-2.5 text-zinc-200"
             >
               <Heart className="h-5 w-5" />
               <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-green-500 text-[10px] font-semibold text-black">
@@ -1267,7 +1267,7 @@ function SiteHeader({
 
             <button
               onClick={onCartOpen}
-              className="relative rounded-2xl border border-white/10 bg-white/5 p-3 text-zinc-200"
+              className="relative rounded-2xl border border-white/10 bg-white/5 p-2.5 text-zinc-200"
             >
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-green-500 text-[10px] font-semibold text-black">
@@ -1277,7 +1277,7 @@ function SiteHeader({
 
             <button
               onClick={() => setMenuOpen(true)}
-              className="rounded-2xl border border-white/10 bg-white/5 p-3 text-zinc-200"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-zinc-200"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -1303,7 +1303,7 @@ function SiteHeader({
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="text-lg font-semibold">NeonStore</p>
-                  <p className="text-xs text-zinc-400">Wear what stands out</p>
+                  <p className="text-[11px] text-zinc-400 sm:text-xs">Wear what stands out</p>
                 </div>
                 <button
                   onClick={() => setMenuOpen(false)}
@@ -1432,9 +1432,14 @@ function SiteHeader({
 
 function HeroSection({ onPrimaryAction, onSecondaryAction, stats }) {
   return (
-    <section id="home" className="relative mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 lg:pt-16">
+    <section id="home" className="relative mx-auto max-w-7xl px-3 pb-5 pt-0 sm:px-6 sm:pb-10 sm:pt-10 lg:px-8 lg:pt-16">
       <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-        <motion.div variants={stagger} initial="hidden" animate="show">
+        <motion.div
+  variants={stagger}
+  initial="hidden"
+  animate="show"
+  className="hidden sm:block"
+>
           <motion.div
             variants={fadeUp}
             className="mb-5 inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300"
@@ -1467,11 +1472,11 @@ function HeroSection({ onPrimaryAction, onSecondaryAction, stats }) {
             </Button>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="mt-8 grid gap-3 sm:grid-cols-3">
+          {/* <motion.div variants={fadeUp} className="mt-8 grid gap-3 sm:grid-cols-3">
             <MiniStat label="Products" value={stats.products} />
             <MiniStat label="Reviews" value={stats.totalReviews} />
             <MiniStat label="Rating" value={`${stats.avg}/5`} />
-          </motion.div>
+          </motion.div> */}
         </motion.div>
 
         <HeroVisual />
@@ -1500,11 +1505,11 @@ function HeroVisual() {
       <div className="absolute -left-10 top-10 h-44 w-44 rounded-full bg-green-500/20 blur-3xl" />
       <div className="absolute -right-6 bottom-8 h-44 w-44 rounded-full bg-emerald-400/10 blur-3xl" />
 
-      <div className="relative grid gap-4 sm:grid-cols-2">
+      <div className="relative grid gap-3 sm:gap-4 sm:grid-cols-2">
         <motion.div
           animate={{ y: [0, -10, 0] }}
           transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-          className="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-3 backdrop-blur-xl"
+          className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-2 backdrop-blur-xl sm:rounded-[28px] sm:p-3"
         >
           <img
             src="https://images.unsplash.com/photo-1523398002811-999ca8dec234?q=80&w=1200&auto=format&fit=crop"
@@ -1517,7 +1522,7 @@ function HeroVisual() {
           <motion.div
             animate={{ y: [0, 12, 0] }}
             transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
-            className="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-3 backdrop-blur-xl"
+            className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-2 backdrop-blur-xl sm:rounded-[28px] sm:p-3"
           >
             <img
               src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
@@ -1526,18 +1531,18 @@ function HeroVisual() {
             />
           </motion.div>
 
-          <div className="rounded-[28px] border border-green-500/15 bg-[#081109] p-5 shadow-[0_0_80px_rgba(34,197,94,0.08)]">
+          <div className="rounded-3xl border border-green-500/15 bg-[#081109] p-4 shadow-[0_0_80px_rgba(34,197,94,0.08)] sm:rounded-[28px] sm:p-5">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <p className="text-sm text-green-300">Customer First</p>
-                <h3 className="mt-1 text-xl font-semibold">Trusted by Real Buyers</h3>
+                <h3 className="mt-1 text-base font-semibold sm:text-xl">Trusted by Real Buyers</h3>
               </div>
               <Badge className="bg-green-500 text-black whitespace-nowrap">
                 Top Rated
               </Badge>
             </div>
 
-            <p className="text-sm leading-6 text-zinc-400">
+            <p className="text-xs leading-5 text-zinc-400 sm:text-sm sm:leading-6">
               Every product is backed by genuine customer feedback, helping you choose with confidence.
             </p>
           </div>
@@ -1559,9 +1564,9 @@ function BrandStrip() {
 
   return (
     <section className="border-y border-white/10 bg-white/[0.03]">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4 py-5 text-sm text-zinc-400 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl snap-x gap-3 overflow-x-auto px-3 py-3 text-xs text-zinc-400 sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-10 sm:gap-y-4 sm:px-6 sm:py-5 sm:text-sm lg:px-8">
         {items.map((item) => (
-          <div key={item} className="flex items-center gap-2">
+          <div key={item} className="flex shrink-0 snap-start items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <ShieldCheck className="h-4 w-4 text-green-300" />
             <span>{item}</span>
           </div>
@@ -1578,15 +1583,15 @@ function SectionHeading({ eyebrow, title, subtitle }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.55 }}
-      className="mb-10 max-w-3xl"
+      className="mb-5 max-w-3xl sm:mb-10"
     >
-      <p className="mb-3 text-sm font-medium uppercase tracking-[0.22em] text-green-300">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-green-300 sm:mb-3 sm:text-sm sm:tracking-[0.22em]">
         {eyebrow}
       </p>
-      <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
+      <h2 className="text-2xl font-semibold leading-tight text-white sm:text-4xl">
         {title}
       </h2>
-      <p className="mt-4 text-base leading-7 text-zinc-400">{subtitle}</p>
+      <p className="mt-3 text-sm leading-6 text-zinc-400 sm:mt-4 sm:text-base sm:leading-7">{subtitle}</p>
     </motion.div>
   );
 }
@@ -1660,7 +1665,7 @@ function ContactSection({ showToast }) {
   };
 
   return (
-    <section id="contact" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section id="contact" className="mx-auto max-w-7xl px-3 py-10 sm:px-6 sm:py-16 lg:px-8">
       <SectionHeading
         eyebrow="Contact Us"
         title="Need help before or after ordering?"
@@ -1668,12 +1673,12 @@ function ContactSection({ showToast }) {
       />
 
       <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-green-500/10 text-green-300 ring-1 ring-green-500/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[30px] sm:p-6">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-green-500/10 text-green-300 ring-1 ring-green-500/20 sm:h-14 sm:w-14">
             <MessageCircle className="h-6 w-6" />
           </div>
 
-          <h3 className="mt-6 text-2xl font-semibold text-white">
+          <h3 className="mt-4 text-xl font-semibold text-white sm:mt-6 sm:text-2xl">
             Customer support
           </h3>
 
@@ -1702,9 +1707,9 @@ function ContactSection({ showToast }) {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[30px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl md:p-6"
+          className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[30px] sm:p-5 md:p-6"
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
             <div>
               <label className="mb-2 block text-sm text-zinc-300">Full Name</label>
               <Input
@@ -1712,7 +1717,7 @@ function ContactSection({ showToast }) {
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Enter your name"
-                className="h-12 rounded-2xl border border-white/10 bg-black/40 text-white placeholder:text-zinc-500"
+                className="h-11 rounded-2xl border border-white/10 bg-black/40 text-sm text-white placeholder:text-zinc-500 sm:h-12"
               />
             </div>
 
@@ -1724,7 +1729,7 @@ function ContactSection({ showToast }) {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                className="h-12 rounded-2xl border border-white/10 bg-black/40 text-white placeholder:text-zinc-500"
+                className="h-11 rounded-2xl border border-white/10 bg-black/40 text-sm text-white placeholder:text-zinc-500 sm:h-12"
               />
             </div>
           </div>
@@ -1736,7 +1741,7 @@ function ContactSection({ showToast }) {
               value={form.mobile}
               onChange={handleChange}
               placeholder="10 digit mobile number"
-              className="h-12 rounded-2xl border border-white/10 bg-black/40 text-white placeholder:text-zinc-500"
+              className="h-11 rounded-2xl border border-white/10 bg-black/40 text-sm text-white placeholder:text-zinc-500 sm:h-12"
             />
           </div>
 
@@ -1749,14 +1754,14 @@ function ContactSection({ showToast }) {
               placeholder="Write your message..."
               rows={6}
               maxLength={1000}
-              className="w-full resize-none rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white outline-none placeholder:text-zinc-500"
+              className="w-full resize-none rounded-2xl border border-white/10 bg-black/40 p-3 text-sm text-white outline-none placeholder:text-zinc-500 sm:p-4"
             />
           </div>
 
           <Button
             type="submit"
             disabled={loading}
-            className="mt-5 h-12 w-full rounded-2xl"
+            className="mt-4 h-11 w-full rounded-2xl sm:mt-5 sm:h-12"
           >
             {loading ? "Sending..." : "Send Message"}
             <Send className="ml-2 h-4 w-4" />
@@ -1839,10 +1844,10 @@ function ProductCard({ product, customerRegion, onLike, liked, onAddToCart, onOp
 
   return (
     <motion.div variants={fadeUp} whileHover={{ y: -8 }} className="h-full">
-      <Card className="group h-full overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.035] text-white backdrop-blur-xl transition duration-300 hover:border-white/20 hover:bg-white/[0.055]">
+      <Card className="group h-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] text-white backdrop-blur-xl transition duration-300 hover:border-white/20 hover:bg-white/[0.055] sm:rounded-[30px]">
         <CardContent className="flex h-full flex-col p-0">
           <div
-            className="relative isolate -mb-px h-72 cursor-pointer overflow-hidden bg-black [backface-visibility:hidden] [transform:translate3d(0,0,0)]"
+            className="relative isolate -mb-px h-40 cursor-pointer overflow-hidden bg-black sm:h-72 [backface-visibility:hidden] [transform:translate3d(0,0,0)]"
             onClick={() => onOpenProduct?.()}
           >
             <img
@@ -1853,8 +1858,8 @@ function ProductCard({ product, customerRegion, onLike, liked, onAddToCart, onOp
             />
 
             <div className="pointer-events-none absolute -inset-px bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
-            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-              {product.badge ? <Badge className="bg-green-500 text-black">{product.badge}</Badge> : null}
+            <div className="absolute left-2 top-2 flex flex-wrap gap-1 sm:left-4 sm:top-4 sm:gap-2">
+              {product.badge ? <Badge className="bg-green-500 px-2 py-0.5 text-[10px] text-black sm:text-xs">{product.badge}</Badge> : null}
               {product.featured ? <Badge className="bg-white text-black">Featured</Badge> : null}
             </div>
 
@@ -1863,24 +1868,26 @@ function ProductCard({ product, customerRegion, onLike, liked, onAddToCart, onOp
                 e.stopPropagation();
                 onLike(productId);
               }}
-              className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition hover:scale-105"
+              className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition hover:scale-105 sm:right-4 sm:top-4 sm:h-10 sm:w-10"
             >
               <Heart className={`h-4 w-4 ${liked ? "fill-green-400 text-green-400" : "text-white"}`} />
             </button>
           </div>
 
-          <div className="relative z-10 flex flex-1 flex-col bg-[#090d09] p-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex flex-1 flex-col bg-[#090d09] p-2.5 sm:p-5">
+            <div className="mb-2 flex items-start justify-between gap-2 sm:mb-3 sm:gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-green-300">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-green-300 sm:text-xs sm:tracking-[0.2em]">
                   {categoryLabel}
                 </p>
-                {subLabel ? <p className="mt-1 text-xs text-zinc-500">{subLabel}</p> : null}
+                {subLabel ? (
+                  <p className="mt-1 hidden text-xs text-zinc-500 sm:block">{subLabel}</p>
+                ) : null}
               </div>
 
               <button
                 onClick={onOpenReviews}
-                className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-sm text-zinc-300 transition hover:bg-white/10"
+                className="flex shrink-0 items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs text-zinc-300 transition hover:bg-white/10 sm:text-sm"
               >
                 <Star className="h-4 w-4 fill-green-400 text-green-400" />
                 {average.toFixed(1)}
@@ -1890,52 +1897,56 @@ function ProductCard({ product, customerRegion, onLike, liked, onAddToCart, onOp
 
             <h3
               onClick={onOpenProduct}
-              className="cursor-pointer text-xl font-semibold leading-snug text-white hover:text-green-300"
+              className="line-clamp-2 cursor-pointer text-sm font-semibold leading-snug text-white hover:text-green-300 sm:text-xl"
             >
               {product.name}
             </h3>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-400">{product.description}</p>
+            <p className="mt-2 hidden line-clamp-2 text-sm leading-6 text-zinc-400 sm:block">
+              {product.description}
+            </p>
             {product.colorway ? (
-              <p className="mt-3 text-xs text-zinc-500">{product.colorway}</p>
+              <p className="mt-2 text-[11px] text-zinc-500 sm:mt-3 sm:text-xs">{product.colorway}</p>
             ) : null}
 
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 hidden text-xs text-zinc-500 sm:block">
               Made to order · Shipping shown at checkout
             </p>
 
-            <div className="mt-auto pt-5">
-              <div className="mb-4 flex items-end justify-between gap-3">
+            <div className="mt-auto pt-3 sm:pt-5">
+              <div className="mb-2 flex flex-col gap-1.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
                 <div>
                   {displayCompareAt ? (
-                    <p className="text-sm text-zinc-500 line-through">
+                    <p className="text-xs text-zinc-500 line-through sm:text-sm">
                       {formatMoney(displayCompareAt, displayCurrency)}
                     </p>
                   ) : null}
 
-                  <p className="text-2xl font-semibold text-white">
+                  <p className="text-lg font-semibold text-white sm:text-2xl">
                     {formatMoney(displayPrice, displayCurrency)}
                   </p>
                 </div>
 
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenProduct?.();
-                  }}
-                  size="sm"
-                  className="min-w-[110px] rounded-full"
-                >
-                  {product?.variants?.length > 0 ? "Select Size" : "View Product"}
-                </Button>
+                <div className="hidden sm:block">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenProduct?.();
+                    }}
+                    size="sm"
+                    className="min-w-[110px] rounded-full"
+                  >
+                    {product?.variants?.length > 0 ? "Select Size" : "View Product"}
+                  </Button>
+                </div>
               </div>
 
               <Button
                 variant="outline"
                 onClick={onOpenReviews}
                 size="sm"
-                className="w-full rounded-full"
+                className="h-8 w-full rounded-full px-2 text-xs sm:h-9 sm:text-sm"
               >
-                <MessageCircle className="mr-2 h-4 w-4" />
+                <MessageCircle className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
                 Reviews
               </Button>
             </div>
@@ -1966,12 +1977,12 @@ function ProductSection({
   return (
     <section
       id={`section-${section.id}`}
-      className="rounded-[34px] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl sm:p-5 lg:p-6"
+      className="rounded-3xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-xl sm:rounded-[34px] sm:p-5 lg:p-6"
     >
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-green-500/10 text-xl text-green-300 ring-1 ring-green-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-green-500/10 text-lg text-green-300 ring-1 ring-green-500/20 sm:h-12 sm:w-12 sm:text-xl">
               {section.icon}
             </div>
 
@@ -1980,13 +1991,13 @@ function ProductSection({
                 Category
               </p>
 
-              <h3 className="text-2xl font-semibold text-white sm:text-3xl">
+              <h3 className="text-xl font-semibold text-white sm:text-3xl">
                 {section.label}
               </h3>
             </div>
           </div>
 
-          <p className="mt-3 text-sm text-zinc-400">
+          <p className="mt-2 text-xs text-zinc-400 sm:mt-3 sm:text-sm">
             {section.products.length} product{section.products.length === 1 ? "" : "s"} available
           </p>
         </div>
@@ -1995,7 +2006,7 @@ function ProductSection({
           <button
             type="button"
             onClick={() => setShowAll((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-zinc-200 transition hover:bg-white/10 hover:text-white"
+            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-zinc-200 transition hover:bg-white/10 hover:text-white sm:px-5 sm:py-3 sm:text-sm"
           >
             {showAll ? "Show Less" : `View All ${section.label}`}
             <ChevronRight className={`ml-2 h-4 w-4 transition ${showAll ? "rotate-90" : ""}`} />
@@ -2003,7 +2014,7 @@ function ProductSection({
         ) : null}
       </div>
 
-      <motion.div layout className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.div layout className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <AnimatePresence>
           {productsToShow.map((product) => (
             <motion.div
@@ -2366,7 +2377,7 @@ function WhyUsGrid() {
   ];
 
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
       {points.map((point) => (
         <motion.div
           key={point.title}
@@ -2374,13 +2385,13 @@ function WhyUsGrid() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.45 }}
-          className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl"
+          className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[28px] sm:p-6"
         >
-          <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-green-500/10 text-green-300 ring-1 ring-green-500/15">
+          <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-green-500/10 text-green-300 ring-1 ring-green-500/15 sm:mb-5 sm:h-12 sm:w-12">
             {point.icon}
           </div>
-          <h3 className="text-xl font-semibold text-white">{point.title}</h3>
-          <p className="mt-3 text-sm leading-6 text-zinc-400">{point.desc}</p>
+          <h3 className="text-base font-semibold text-white sm:text-xl">{point.title}</h3>
+          <p className="mt-2 text-xs leading-5 text-zinc-400 sm:mt-3 sm:text-sm sm:leading-6">{point.desc}</p>
         </motion.div>
       ))}
     </div>
@@ -2389,11 +2400,11 @@ function WhyUsGrid() {
 
 function SiteFooter() {
   return (
-    <footer className="relative z-10 mt-20 border-t border-white/10 bg-black/70 text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <footer className="relative z-10 mt-10 border-t border-white/10 bg-black/70 text-white sm:mt-20">
+      <div className="mx-auto grid max-w-7xl gap-7 px-3 py-8 sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-2">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-green-400 to-green-600 text-black">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-green-400 to-green-600 text-black sm:h-11 sm:w-11">
               <img
                 src={neonLogo}
                 alt="Neon Store logo"
@@ -2403,11 +2414,11 @@ function SiteFooter() {
 
             <div>
               <p className="text-lg font-semibold text-white">NeonStore</p>
-              <p className="text-xs text-zinc-400">Wear what stands out</p>
+              <p className="text-[11px] text-zinc-400 sm:text-xs">Wear what stands out</p>
             </div>
           </div>
 
-          <p className="mt-4 max-w-md text-sm leading-6 text-zinc-400">
+          <p className="mt-3 max-w-md text-xs leading-5 text-zinc-400 sm:mt-4 sm:text-sm sm:leading-6">
             Custom products printed on demand and fulfilled through trusted
             production partners. Secure checkout, clear policies, and support
             when you need help.
@@ -2419,7 +2430,7 @@ function SiteFooter() {
             Shop
           </p>
 
-          <div className="mt-4 space-y-3 text-sm text-zinc-400">
+          <div className="mt-3 space-y-2.5 text-sm text-zinc-400 sm:mt-4 sm:space-y-3">
             <a className="block transition hover:text-green-300" href="#featured">
               Featured
             </a>
@@ -2440,7 +2451,7 @@ function SiteFooter() {
             Support & Policies
           </p>
 
-          <div className="mt-4 space-y-3 text-sm text-zinc-400">
+          <div className="mt-3 space-y-2.5 text-sm text-zinc-400 sm:mt-4 sm:space-y-3">
             <a className="block transition hover:text-green-300" href="/shipping-policy">
               Shipping Policy
             </a>
@@ -2603,7 +2614,7 @@ function ToastViewport({ toast }) {
           initial={{ opacity: 0, y: -20, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -16, scale: 0.98 }}
-          className={`fixed right-4 top-24 z-[140] flex max-w-sm items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl ${toast.type === "success"
+          className={`fixed left-3 right-3 top-24 z-[140] flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl sm:left-auto sm:right-4 sm:max-w-sm ${toast.type === "success"
             ? "border-green-500/30 bg-green-500/15 text-green-100"
             : "border-red-500/30 bg-red-500/15 text-red-100"
             }`}
@@ -2618,7 +2629,7 @@ function ToastViewport({ toast }) {
 
 function LoadingBox() {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-zinc-300">
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-zinc-300 sm:p-8">
       Loading products...
     </div>
   );
@@ -2626,7 +2637,7 @@ function LoadingBox() {
 
 function ErrorPanel({ message }) {
   return (
-    <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-200">
+    <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-200 sm:p-8">
       {message}
     </div>
   );
@@ -2634,7 +2645,7 @@ function ErrorPanel({ message }) {
 
 function EmptyState({ title, subtitle }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center">
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center sm:p-10">
       <Sparkles className="mx-auto h-10 w-10 text-green-300" />
       <h3 className="mt-4 text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm text-zinc-400">{subtitle}</p>

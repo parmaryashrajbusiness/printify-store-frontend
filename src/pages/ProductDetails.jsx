@@ -139,6 +139,7 @@ export default function ProductDetails() {
   const [reviews, setReviews] = useState([]);
 
   const [activeImage, setActiveImage] = useState("");
+  const [touchStartX, setTouchStartX] = useState(null);
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -202,6 +203,33 @@ export default function ProductDetails() {
     () => getDisplayImages(product, selectedVariant),
     [product, selectedVariant]
   );
+
+  const activeImageIndex = useMemo(() => {
+    const index = images.findIndex((img) => img === activeImage);
+    return index >= 0 ? index : 0;
+  }, [images, activeImage]);
+
+  const selectImageByIndex = (index) => {
+    if (!images.length) return;
+
+    const safeIndex = (index + images.length) % images.length;
+    setActiveImage(images[safeIndex]);
+  };
+
+  const handleImageTouchEnd = (e) => {
+    if (touchStartX == null || images.length <= 1) return;
+
+    const touchEndX = e.changedTouches?.[0]?.clientX;
+    if (touchEndX == null) return;
+
+    const distance = touchStartX - touchEndX;
+
+    if (Math.abs(distance) > 40) {
+      selectImageByIndex(activeImageIndex + (distance > 0 ? 1 : -1));
+    }
+
+    setTouchStartX(null);
+  };
 
   useEffect(() => {
     if (!selectedVariant) return;
@@ -387,7 +415,7 @@ export default function ProductDetails() {
     if (!isAuthenticated) {
       setAuthMode("login");
       setAuthModalOpen(true);
-      showToast("error", "Please login to add product to cart.");
+      showToast("error", "Login to add items, place orders, and track delivery.");
       return;
     }
 
@@ -542,6 +570,34 @@ export default function ProductDetails() {
     }
   };
 
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+
+    const firstVariantForColor = product?.variants?.find(
+      (variant) => variant.enabled && variant.color === color
+    );
+
+    if (firstVariantForColor) {
+      setSelectedVariantId(variantIdForRegion(firstVariantForColor, customerRegion));
+
+      const variantImages = getVariantImages(firstVariantForColor);
+
+      if (variantImages.length > 0) {
+        setActiveImage(variantImages[0]);
+      }
+    }
+  };
+
+  const handleVariantSelect = (variant) => {
+    setSelectedVariantId(variantIdForRegion(variant, customerRegion));
+
+    const variantImages = getVariantImages(variant);
+
+    if (variantImages.length > 0) {
+      setActiveImage(variantImages[0]);
+    }
+  };
+
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
 
@@ -592,18 +648,18 @@ export default function ProductDetails() {
         onLogout={logout}
       />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300 transition hover:bg-white/10 hover:text-white sm:mb-6 sm:px-4 sm:text-sm"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
 
         <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="grid gap-4 lg:grid-cols-[90px_1fr]">
-            <div className="order-2 flex gap-3 overflow-x-auto lg:order-1 lg:flex-col lg:overflow-visible">
+          <div className="grid gap-3 lg:grid-cols-[90px_1fr] lg:gap-4">
+            <div className="hidden gap-3 overflow-x-auto lg:order-1 lg:flex lg:flex-col lg:overflow-visible">
               {images.map((img) => (
                 <button
                   key={img}
@@ -619,17 +675,19 @@ export default function ProductDetails() {
               ))}
             </div>
 
-            <div className="order-1 lg:order-2">
+            <div className="lg:order-2">
               <div
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setZoom((prev) => ({ ...prev, active: true }))}
                 onMouseLeave={() => setZoom((prev) => ({ ...prev, active: false }))}
-                className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04]"
+                onTouchStart={(e) => setTouchStartX(e.touches?.[0]?.clientX ?? null)}
+                onTouchEnd={handleImageTouchEnd}
+                className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] sm:rounded-[32px]"
               >
                 <img
                   src={activeImage}
                   alt={product.name}
-                  className="h-[520px] w-full object-cover"
+                  className="h-[430px] w-full object-cover sm:h-[520px]"
                 />
 
                 {zoom.active && activeImage ? (
@@ -643,7 +701,7 @@ export default function ProductDetails() {
                   />
                 ) : null}
 
-                <div className="absolute left-4 top-4 flex gap-2">
+                <div className="absolute left-3 top-3 flex gap-2 sm:left-4 sm:top-4">
                   {product.featured ? (
                     <Badge className="bg-green-500 text-black">Featured</Badge>
                   ) : null}
@@ -653,23 +711,51 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              <p className="mt-3 text-center text-xs text-zinc-500">
+              {images.length > 1 ? (
+                <div className="mt-3 flex justify-center gap-1.5 lg:hidden">
+                  {images.map((img, index) => (
+                    <button
+                      key={img}
+                      type="button"
+                      onClick={() => selectImageByIndex(index)}
+                      aria-label={`Show image ${index + 1}`}
+                      className={`h-1.5 rounded-full transition-all ${index === activeImageIndex
+                        ? "w-5 bg-green-400"
+                        : "w-1.5 bg-white/30"
+                        }`}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              <p className="mt-3 hidden text-center text-xs text-zinc-500 lg:block">
                 Hover over image to zoom
               </p>
             </div>
           </div>
 
-          <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
-            <p className="text-sm uppercase tracking-[0.22em] text-green-300">
+          <MobileVariantPicker
+            product={product}
+            availableColors={availableColors}
+            selectedColor={selectedColor}
+            sizeVariants={sizeVariants}
+            selectedVariantId={selectedVariantId}
+            customerRegion={customerRegion}
+            onColorSelect={handleColorSelect}
+            onVariantSelect={handleVariantSelect}
+          />
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[32px] sm:p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-green-300 sm:text-sm sm:tracking-[0.22em]">
               {product.categoryName || product.sectionName || product.category || "Product"}
               {product.subCategoryName ? ` / ${product.subCategoryName}` : ""}
             </p>
 
-            <h1 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
+            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:mt-3 md:text-5xl">
               {product.name}
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
               <div className="inline-flex items-center gap-2 rounded-full bg-green-500 px-3 py-1 text-sm font-semibold text-black">
                 <Star className="h-4 w-4 fill-black" />
                 {Number(average || 0).toFixed(1)}
@@ -679,37 +765,37 @@ export default function ProductDetails() {
               </p>
             </div>
 
-            <div className="mt-6 flex items-end gap-3">
-              <p className="text-4xl font-semibold">
+            <div className="mt-4 flex items-end gap-2 sm:mt-6 sm:gap-3">
+              <p className="text-3xl font-semibold sm:text-4xl">
                 {formatMoney(displayPrice, displayCurrency)}
               </p>
 
               {displayCompareAt ? (
-                <p className="pb-1 text-lg text-zinc-500 line-through">
+                <p className="pb-1 text-base text-zinc-500 line-through sm:text-lg">
                   {formatMoney(displayCompareAt, displayCurrency)}
                 </p>
               ) : null}
             </div>
 
-            <p className="mt-5 text-base leading-7 text-zinc-300">
+            <p className="mt-4 text-sm leading-6 text-zinc-300 sm:mt-5 sm:text-base sm:leading-7">
               {product.description}
             </p>
 
             {product.colorway ? (
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-3 sm:mt-5 sm:p-4">
                 <p className="text-sm text-zinc-500">Color / Style</p>
                 <p className="mt-1 font-medium">{product.colorway}</p>
               </div>
             ) : null}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
               <TrustCard icon={<Truck className="h-5 w-5" />} title="Fast Dispatch" />
               <TrustCard icon={<ShieldCheck className="h-5 w-5" />} title="Secure Checkout" />
               <TrustCard icon={<RotateCcw className="h-5 w-5" />} title="Support Available" />
             </div>
 
             {product.variants?.length > 0 ? (
-              <div className="mt-6 space-y-5">
+              <div className="mt-6 hidden space-y-5 lg:block">
                 {availableColors.length > 0 ? (
                   <div>
                     <p className="mb-3 text-sm text-zinc-400">Color</p>
@@ -719,23 +805,7 @@ export default function ProductDetails() {
                         <button
                           key={color}
                           type="button"
-                          onClick={() => {
-                            setSelectedColor(color);
-
-                            const firstVariantForColor = product.variants.find(
-                              (variant) => variant.enabled && variant.color === color
-                            );
-
-                            if (firstVariantForColor) {
-                              setSelectedVariantId(variantIdForRegion(firstVariantForColor, customerRegion));
-
-                              const variantImages = getVariantImages(firstVariantForColor);
-
-                              if (variantImages.length > 0) {
-                                setActiveImage(variantImages[0]);
-                              }
-                            }
-                          }}
+                          onClick={() => handleColorSelect(color)}
                           className={`rounded-xl border px-4 py-2 text-sm transition ${selectedColor === color
                             ? "border-green-400 bg-green-500 text-black"
                             : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
@@ -756,15 +826,7 @@ export default function ProductDetails() {
                       <button
                         key={variantIdForRegion(variant, customerRegion)}
                         type="button"
-                        onClick={() => {
-                          setSelectedVariantId(variantIdForRegion(variant, customerRegion));
-
-                          const variantImages = getVariantImages(variant);
-
-                          if (variantImages.length > 0) {
-                            setActiveImage(variantImages[0]);
-                          }
-                        }}
+                        onClick={() => handleVariantSelect(variant)}
                         className={`rounded-xl border px-4 py-2 text-sm transition ${selectedVariantId === variantIdForRegion(variant, customerRegion)
                           ? "border-green-400 bg-green-500 text-black"
                           : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
@@ -778,15 +840,15 @@ export default function ProductDetails() {
               </div>
             ) : null}
 
-            <div className="mt-7 space-y-4">
-              <div className="flex items-center justify-between gap-4">
+            <div className="mt-5 space-y-3 sm:mt-7 sm:space-y-4">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <p className="text-sm font-medium text-zinc-300">Quantity</p>
 
-                <div className="flex h-12 items-center rounded-full border border-white/10 bg-black/30">
+                <div className="flex h-11 items-center rounded-full border border-white/10 bg-black/30 sm:h-12">
                   <button
                     type="button"
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    className="grid h-12 w-12 place-items-center rounded-l-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                    className="grid h-11 w-11 place-items-center rounded-l-full text-zinc-300 transition hover:bg-white/10 hover:text-white sm:h-12 sm:w-12"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="h-4 w-4" />
@@ -800,7 +862,7 @@ export default function ProductDetails() {
                     type="button"
                     disabled={quantity >= MAX_QUANTITY_PER_VARIANT}
                     onClick={() => setQuantity((prev) => Math.min(MAX_QUANTITY_PER_VARIANT, prev + 1))}
-                    className="grid h-12 w-12 place-items-center rounded-r-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-300"
+                    className="grid h-11 w-11 place-items-center rounded-r-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-300 sm:h-12 sm:w-12"
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
@@ -816,7 +878,7 @@ export default function ProductDetails() {
               <Button
                 onClick={addToCart}
                 disabled={product.variants?.length > 0 && !selectedVariantId}
-                className="h-12 w-full rounded-2xl"
+                className="h-11 w-full rounded-2xl sm:h-12"
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Add to Cart
@@ -826,14 +888,14 @@ export default function ProductDetails() {
                 type="button"
                 onClick={toggleWishlist}
                 variant="outline"
-                className="h-12 w-full rounded-2xl"
+                className="h-11 w-full rounded-2xl sm:h-12"
               >
                 <Heart className="mr-2 h-4 w-4" />
                 Add to Wishlist
               </Button>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm text-yellow-100">
+            <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-100 sm:mt-6 sm:p-4 sm:text-sm">
               Final delivery time and shipping charges are calculated during checkout.
             </div>
           </div>
@@ -902,9 +964,9 @@ export default function ProductDetails() {
 function ProductDetailsHeader({ user, cartCount, onHome, onCartOpen, onLogout }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <button type="button" onClick={onHome} className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-black shadow-[0_0_35px_rgba(34,197,94,0.45)] ring-1 ring-green-500/20">
+          <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-black shadow-[0_0_35px_rgba(34,197,94,0.45)] ring-1 ring-green-500/20 sm:h-12 sm:w-12">
             <img
               src={neonLogo}
               alt="NeonStore logo"
@@ -913,16 +975,16 @@ function ProductDetailsHeader({ user, cartCount, onHome, onCartOpen, onLogout })
           </div>
 
           <div className="text-left">
-            <p className="text-lg font-semibold tracking-wide">NeonStore</p>
-            <p className="text-xs text-zinc-400">Premium custom store</p>
+            <p className="text-base font-semibold tracking-wide sm:text-lg">NeonStore</p>
+            <p className="text-[11px] text-zinc-400 sm:text-xs">Premium custom store</p>
           </div>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onCartOpen}
-            className="relative rounded-2xl border border-white/10 bg-white/5 p-3 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+            className="relative rounded-2xl border border-white/10 bg-white/5 p-2.5 text-zinc-300 transition hover:bg-white/10 hover:text-white sm:p-3"
           >
             <ShoppingBag className="h-4 w-4" />
             <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-green-500 text-[10px] font-semibold text-black">
@@ -949,11 +1011,83 @@ function ProductDetailsHeader({ user, cartCount, onHome, onCartOpen, onLogout })
   );
 }
 
+
+function MobileVariantPicker({
+  product,
+  availableColors,
+  selectedColor,
+  sizeVariants,
+  selectedVariantId,
+  customerRegion,
+  onColorSelect,
+  onVariantSelect,
+}) {
+  if (!product?.variants?.length) return null;
+
+  return (
+    <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl lg:hidden">
+      {availableColors.length > 0 ? (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-white">Color</p>
+            {selectedColor ? (
+              <p className="text-xs text-zinc-400">{selectedColor}</p>
+            ) : null}
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {availableColors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => onColorSelect(color)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-sm transition ${selectedColor === color
+                  ? "border-green-400 bg-green-500 text-black"
+                  : "border-white/10 bg-white/5 text-zinc-300"
+                  }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className={availableColors.length > 0 ? "mt-5" : ""}>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Size</p>
+          <p className="text-xs text-zinc-500">Select before adding to cart</p>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2">
+          {sizeVariants.map((variant) => {
+            const variantId = variantIdForRegion(variant, customerRegion);
+
+            return (
+              <button
+                key={variantId}
+                type="button"
+                onClick={() => onVariantSelect(variant)}
+                className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${selectedVariantId === variantId
+                  ? "border-green-400 bg-green-500 text-black"
+                  : "border-white/10 bg-black/30 text-zinc-200"
+                  }`}
+              >
+                {variant.size || variant.title}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TrustCard({ icon, title }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-3 sm:p-4">
       <div className="text-green-300">{icon}</div>
-      <p className="mt-2 text-sm font-medium">{title}</p>
+      <p className="mt-2 text-[11px] font-medium leading-4 sm:text-sm">{title}</p>
     </div>
   );
 }
@@ -968,10 +1102,10 @@ function ProductInfoTabs({ product }) {
   ];
 
   return (
-    <section className="mt-10 rounded-[32px] border border-white/10 bg-white/[0.04] p-6">
-      <h2 className="text-2xl font-semibold">Product details</h2>
+    <section className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 sm:mt-10 sm:rounded-[32px] sm:p-6">
+      <h2 className="text-xl font-semibold sm:text-2xl">Product details</h2>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-4 md:grid-cols-2">
         {details.map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-white/10 bg-black/30 p-4">
             <p className="text-sm text-zinc-500">{label}</p>
@@ -1096,7 +1230,7 @@ function ReviewsSection({
   };
 
   return (
-    <section className="mt-10 rounded-[32px] border border-white/10 bg-white/[0.04] p-6">
+    <section className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 sm:mt-10 sm:rounded-[32px] sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.22em] text-green-300">Reviews</p>
@@ -1230,14 +1364,20 @@ function SimilarProducts({ products, customerRegion, onOpen }) {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="mt-10">
-      <h2 className="text-2xl font-semibold">Similar products</h2>
-      <p className="mt-2 text-sm text-zinc-400">
-        More products from similar category or design style.
-      </p>
+    <section className="mt-8 sm:mt-10">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold sm:text-2xl">Similar products</h2>
+          <p className="mt-1 text-xs text-zinc-400 sm:mt-2 sm:text-sm">
+            More products from similar category or design style.
+          </p>
+        </div>
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.slice(0, 4).map((product) => {
+        <p className="text-xs text-zinc-500 sm:hidden">Swipe</p>
+      </div>
+
+      <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-2 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
+        {products.slice(0, 8).map((product) => {
           const { displayCurrency, displayPrice } = getProductDisplayPricing(
             product,
             customerRegion
@@ -1248,22 +1388,24 @@ function SimilarProducts({ products, customerRegion, onOpen }) {
               key={productIdOf(product)}
               type="button"
               onClick={() => onOpen(product)}
-              className="group overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] text-left transition hover:border-green-500/30"
+              className="group flex w-[46vw] max-w-[210px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] text-left transition hover:border-green-500/30 sm:w-auto sm:max-w-none sm:rounded-[28px]"
             >
               <img
                 src={getImages(product)[0]}
                 alt={product.name}
-                className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                className="h-40 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-64"
               />
 
-              <div className="p-5">
-                <p className="text-xs uppercase tracking-[0.2em] text-green-300">
+              <div className="flex flex-1 flex-col p-3 sm:p-5">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-green-300 sm:text-xs sm:tracking-[0.2em]">
                   {product.categoryName || product.category || "Product"}
                 </p>
 
-                <h3 className="mt-2 line-clamp-2 font-semibold">{product.name}</h3>
+                <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-snug sm:text-base">
+                  {product.name}
+                </h3>
 
-                <p className="mt-3 text-xl font-semibold">
+                <p className="mt-auto pt-3 text-lg font-semibold sm:text-xl">
                   {formatMoney(displayPrice, displayCurrency)}
                 </p>
               </div>
@@ -1284,7 +1426,7 @@ function ToastViewport({ toast }) {
           initial={{ opacity: 0, y: -20, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -16, scale: 0.98 }}
-          className={`fixed right-4 top-6 z-[140] flex max-w-sm items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl ${toast.type === "success"
+          className={`fixed left-3 right-3 top-20 z-[140] flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl sm:left-auto sm:right-4 sm:top-6 sm:max-w-sm ${toast.type === "success"
             ? "border-green-500/30 bg-green-500/15 text-green-100"
             : "border-red-500/30 bg-red-500/15 text-red-100"
             }`}
