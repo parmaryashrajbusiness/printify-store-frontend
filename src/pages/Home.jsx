@@ -1435,11 +1435,11 @@ function HeroSection({ onPrimaryAction, onSecondaryAction, stats }) {
     <section id="home" className="relative mx-auto max-w-7xl px-3 pb-5 pt-0 sm:px-6 sm:pb-10 sm:pt-10 lg:px-8 lg:pt-16">
       <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <motion.div
-  variants={stagger}
-  initial="hidden"
-  animate="show"
-  className="hidden sm:block"
->
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="hidden sm:block"
+        >
           <motion.div
             variants={fadeUp}
             className="mb-5 inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300"
@@ -1859,8 +1859,11 @@ function ProductCard({ product, customerRegion, onLike, liked, onAddToCart, onOp
 
             <div className="pointer-events-none absolute -inset-px bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
             <div className="absolute left-2 top-2 flex flex-wrap gap-1 sm:left-4 sm:top-4 sm:gap-2">
-              {product.badge ? <Badge className="bg-green-500 px-2 py-0.5 text-[10px] text-black sm:text-xs">{product.badge}</Badge> : null}
-              {product.featured ? <Badge className="bg-white text-black">Featured</Badge> : null}
+              {product.featured ? (
+                <Badge className="bg-green-500 px-2 py-0.5 text-[10px] text-black sm:text-xs">
+                  Featured
+                </Badge>
+              ) : null}
             </div>
 
             <button

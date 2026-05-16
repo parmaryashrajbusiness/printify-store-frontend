@@ -705,9 +705,6 @@ export default function ProductDetails() {
                   {product.featured ? (
                     <Badge className="bg-green-500 text-black">Featured</Badge>
                   ) : null}
-                  {product.badge ? (
-                    <Badge className="bg-white text-black">{product.badge}</Badge>
-                  ) : null}
                 </div>
               </div>
 
