@@ -1,3 +1,5 @@
+import PolicyNav from "@/pages/policies/PolicyNav";
+
 export default function RefundPolicy() {
   return (
     <main className="min-h-screen bg-[#050805] px-4 py-24 text-white">
@@ -9,7 +11,7 @@ export default function RefundPolicy() {
         <h1 className="mt-3 text-4xl font-semibold">Refund & Return Policy</h1>
 
         <p className="mt-3 text-sm text-zinc-400">Last updated: May 4, 2026</p>
-
+        <PolicyNav />
         <div className="mt-8 space-y-7 text-sm leading-7 text-zinc-300">
           <p>
             Our products are made to order. Once an order is placed, the item is

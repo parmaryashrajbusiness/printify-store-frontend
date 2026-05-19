@@ -51,24 +51,24 @@ function getImages(product) {
 function getVariantImages(variant) {
   const images = [];
 
-  if (Array.isArray(variant?.images)) images.push(...variant.images);
-  if (Array.isArray(variant?.imageUrls)) images.push(...variant.imageUrls);
-
-  // Multiple Qikink mockups for same color
-  if (Array.isArray(variant?.qikinkMockupLinks)) {
-    images.push(...variant.qikinkMockupLinks);
-  }
-
-  if (variant?.imageUrl) images.push(variant.imageUrl);
-  if (variant?.image) images.push(variant.image);
-
-  // Single Qikink/mockup fields
+  // Main/primary mockup first
   if (variant?.qikinkMockupLink) images.push(variant.qikinkMockupLink);
   if (variant?.qikinkMockupUrl) images.push(variant.qikinkMockupUrl);
   if (variant?.mockupLink) images.push(variant.mockupLink);
   if (variant?.mockupUrl) images.push(variant.mockupUrl);
   if (variant?.mockup_url) images.push(variant.mockup_url);
   if (variant?.mockup_link) images.push(variant.mockup_link);
+
+  // Then extra gallery images
+  if (Array.isArray(variant?.qikinkMockupLinks)) {
+    images.push(...variant.qikinkMockupLinks);
+  }
+
+  if (Array.isArray(variant?.images)) images.push(...variant.images);
+  if (Array.isArray(variant?.imageUrls)) images.push(...variant.imageUrls);
+
+  if (variant?.imageUrl) images.push(variant.imageUrl);
+  if (variant?.image) images.push(variant.image);
 
   return [...new Set(images.filter(Boolean))];
 }
@@ -637,7 +637,7 @@ export default function ProductDetails() {
       : ratingOf(product);
 
   return (
-    <div className="min-h-screen bg-[#050805] text-white">
+    <div className="min-h-screen overflow-x-hidden bg-[#050805] text-white">
       <AnimatedBackground />
 
       <ProductDetailsHeader
@@ -648,7 +648,7 @@ export default function ProductDetails() {
         onLogout={logout}
       />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-7xl overflow-x-hidden px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300 transition hover:bg-white/10 hover:text-white sm:mb-6 sm:px-4 sm:text-sm"
@@ -657,8 +657,8 @@ export default function ProductDetails() {
           Back
         </button>
 
-        <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="grid gap-3 lg:grid-cols-[90px_1fr] lg:gap-4">
+        <section className="grid w-full min-w-0 max-w-full gap-5 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
+          <div className="grid w-full min-w-0 max-w-full gap-3 lg:grid-cols-[90px_1fr] lg:gap-4">
             <div className="hidden gap-3 overflow-x-auto lg:order-1 lg:flex lg:flex-col lg:overflow-visible">
               {images.map((img) => (
                 <button
@@ -675,20 +675,25 @@ export default function ProductDetails() {
               ))}
             </div>
 
-            <div className="lg:order-2">
+            <div className="w-full min-w-0 max-w-full lg:order-2">
               <div
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setZoom((prev) => ({ ...prev, active: true }))}
                 onMouseLeave={() => setZoom((prev) => ({ ...prev, active: false }))}
                 onTouchStart={(e) => setTouchStartX(e.touches?.[0]?.clientX ?? null)}
                 onTouchEnd={handleImageTouchEnd}
-                className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] sm:rounded-[32px]"
-              >
-                <img
-                  src={activeImage}
-                  alt={product.name}
-                  className="h-[430px] w-full object-cover sm:h-[520px]"
-                />
+                className="relative flex aspect-[4/5] w-full min-w-0 items-center justify-center overflow-hidden rounded-[28px] border border-white/10 bg-black sm:h-[520px] sm:aspect-auto sm:rounded-[32px] lg:bg-white/[0.04]"              >
+                {activeImage ? (
+                  <img
+                    src={activeImage}
+                    alt={product.name}
+                    className="h-full w-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center bg-black text-sm text-zinc-500">
+                    Image not available
+                  </div>
+                )}
 
                 {zoom.active && activeImage ? (
                   <div
@@ -742,13 +747,13 @@ export default function ProductDetails() {
             onVariantSelect={handleVariantSelect}
           />
 
-          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[32px] sm:p-6">
+          <div className="w-full min-w-0 max-w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[32px] sm:p-6">
             <p className="text-xs uppercase tracking-[0.18em] text-green-300 sm:text-sm sm:tracking-[0.22em]">
               {product.categoryName || product.sectionName || product.category || "Product"}
               {product.subCategoryName ? ` / ${product.subCategoryName}` : ""}
             </p>
 
-            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:mt-3 md:text-5xl">
+            <h1 className="mt-2 min-w-0 break-words text-2xl font-semibold leading-tight sm:mt-3 md:text-5xl">
               {product.name}
             </h1>
 
@@ -762,7 +767,7 @@ export default function ProductDetails() {
               </p>
             </div>
 
-            <div className="mt-4 flex items-end gap-2 sm:mt-6 sm:gap-3">
+            <div className="mt-4 flex min-w-0 flex-wrap items-end gap-2 sm:mt-6 sm:gap-3">
               <p className="text-3xl font-semibold sm:text-4xl">
                 {formatMoney(displayPrice, displayCurrency)}
               </p>
@@ -774,18 +779,13 @@ export default function ProductDetails() {
               ) : null}
             </div>
 
-            <p className="mt-4 text-sm leading-6 text-zinc-300 sm:mt-5 sm:text-base sm:leading-7">
+            <p className="mt-4 min-w-0 break-words text-sm leading-6 text-zinc-300 sm:mt-5 sm:text-base sm:leading-7">
               {product.description}
             </p>
 
-            {product.colorway ? (
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-3 sm:mt-5 sm:p-4">
-                <p className="text-sm text-zinc-500">Color / Style</p>
-                <p className="mt-1 font-medium">{product.colorway}</p>
-              </div>
-            ) : null}
+            
 
-            <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-3 sm:gap-3">
               <TrustCard icon={<Truck className="h-5 w-5" />} title="Fast Dispatch" />
               <TrustCard icon={<ShieldCheck className="h-5 w-5" />} title="Secure Checkout" />
               <TrustCard icon={<RotateCcw className="h-5 w-5" />} title="Support Available" />
@@ -875,7 +875,7 @@ export default function ProductDetails() {
               <Button
                 onClick={addToCart}
                 disabled={product.variants?.length > 0 && !selectedVariantId}
-                className="h-11 w-full rounded-2xl sm:h-12"
+                className="h-11 w-full min-w-0 overflow-hidden rounded-2xl text-sm sm:h-12"
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Add to Cart
@@ -885,7 +885,7 @@ export default function ProductDetails() {
                 type="button"
                 onClick={toggleWishlist}
                 variant="outline"
-                className="h-11 w-full rounded-2xl sm:h-12"
+                className="h-11 w-full min-w-0 overflow-hidden rounded-2xl text-sm sm:h-12"
               >
                 <Heart className="mr-2 h-4 w-4" />
                 Add to Wishlist
@@ -1022,17 +1022,17 @@ function MobileVariantPicker({
   if (!product?.variants?.length) return null;
 
   return (
-    <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl lg:hidden">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl lg:hidden">
       {availableColors.length > 0 ? (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-white">Color</p>
+        <div className="min-w-0">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+            <p className="shrink-0 text-sm font-semibold text-white">Color</p>
             {selectedColor ? (
-              <p className="text-xs text-zinc-400">{selectedColor}</p>
+              <p className="min-w-0 truncate text-xs text-zinc-400">{selectedColor}</p>
             ) : null}
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="-mx-4 flex max-w-[calc(100%+32px)] gap-2 overflow-x-auto px-4 pb-2">
             {availableColors.map((color) => (
               <button
                 key={color}
@@ -1050,13 +1050,13 @@ function MobileVariantPicker({
         </div>
       ) : null}
 
-      <div className={availableColors.length > 0 ? "mt-5" : ""}>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold text-white">Size</p>
-          <p className="text-xs text-zinc-500">Select before adding to cart</p>
+      <div className={availableColors.length > 0 ? "mt-5 min-w-0" : "min-w-0"}>
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+          <p className="shrink-0 text-sm font-semibold text-white">Size</p>
+          <p className="min-w-0 truncate text-xs text-zinc-500">Select before adding to cart</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="-mx-4 flex max-w-[calc(100%+32px)] gap-2 overflow-x-auto px-4 pb-2">
           {sizeVariants.map((variant) => {
             const variantId = variantIdForRegion(variant, customerRegion);
 
@@ -1065,9 +1065,9 @@ function MobileVariantPicker({
                 key={variantId}
                 type="button"
                 onClick={() => onVariantSelect(variant)}
-                className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${selectedVariantId === variantId
-                  ? "border-green-400 bg-green-500 text-black"
-                  : "border-white/10 bg-black/30 text-zinc-200"
+                className={`shrink-0 rounded-full border px-5 py-2.5 text-sm font-semibold transition ${selectedVariantId === variantId
+                    ? "border-green-400 bg-green-500 text-black"
+                    : "border-white/10 bg-black/30 text-zinc-200"
                   }`}
               >
                 {variant.size || variant.title}
@@ -1082,9 +1082,11 @@ function MobileVariantPicker({
 
 function TrustCard({ icon, title }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-3 sm:p-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/30 p-3 sm:p-4">
       <div className="text-green-300">{icon}</div>
-      <p className="mt-2 text-[11px] font-medium leading-4 sm:text-sm">{title}</p>
+      <p className="mt-2 min-w-0 break-words text-[11px] font-medium leading-4 sm:text-sm">
+        {title}
+      </p>
     </div>
   );
 }
@@ -1101,6 +1103,15 @@ function ProductInfoTabs({ product }) {
   return (
     <section className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 sm:mt-10 sm:rounded-[32px] sm:p-6">
       <h2 className="text-xl font-semibold sm:text-2xl">Product details</h2>
+
+      {product.longDescription ? (
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 sm:mt-6">
+          <p className="text-sm text-zinc-500">Description</p>
+          <p className="mt-2 min-w-0 break-words text-sm leading-6 text-zinc-300 sm:text-base sm:leading-7">
+            {product.longDescription}
+          </p>
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-4 md:grid-cols-2">
         {details.map(([label, value]) => (

@@ -49,6 +49,7 @@ function fieldLabel(key) {
     email: "email",
     phone: "phone",
     addressLine1: "Address line 1",
+    addressLine2: "Address line 2",
     city: "City",
     state: "State",
     postalCode: "Postal code",
@@ -344,6 +345,11 @@ export default function CheckoutModal({
     e.preventDefault();
 
     const validationErrors = validateShippingForm(form);
+
+    if (!form.addressLine2.trim()) {
+      validationErrors["Address line 2"] = "Address line 2 is required.";
+    }
+
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) return;
@@ -357,8 +363,7 @@ export default function CheckoutModal({
 
     if (!policiesAccepted) {
       setErrors({
-        policy:
-          "Please accept the made-to-order, refund, return, and shipping policies before payment.",
+        policy: "Please accept the Terms and Conditions before payment.",
       });
       return;
     }
@@ -566,12 +571,14 @@ export default function CheckoutModal({
                   />
                 </FieldError>
 
-                <Input
-                  value={form.addressLine2}
-                  onChange={(e) => updateField("addressLine2", e.target.value)}
-                  placeholder="Area, Street, Sector, Village, Landmark optional"
-                  className="h-12 rounded-2xl border border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
-                />
+                <FieldError error={errors["Address line 2"]}>
+                  <Input
+                    value={form.addressLine2}
+                    onChange={(e) => updateField("addressLine2", e.target.value)}
+                    placeholder="Area, Street, Sector, Village, Landmark"
+                    className="h-12 rounded-2xl border border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+                  />
+                </FieldError>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FieldError error={errors.State}>
@@ -724,67 +731,6 @@ export default function CheckoutModal({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-xs leading-5 text-yellow-50">
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
-
-                    <div className="min-w-0">
-                      <p className="font-semibold">Made-to-order policy</p>
-                      <p className="mt-1 text-yellow-100/90">
-                        Custom printed after order confirmation. No returns for size, color,
-                        address mistakes, delivery refusal, or change of mind.
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={() => setPolicyOpen((prev) => !prev)}
-                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-yellow-300 transition hover:text-yellow-200"
-                      >
-                        {policyOpen ? "Hide full policy" : "Read full policy"}
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 transition-transform ${policyOpen ? "rotate-180" : ""
-                            }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <AnimatePresence initial={false}>
-                    {policyOpen ? (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-3 space-y-2 border-t border-yellow-500/20 pt-3 text-yellow-100/90">
-                          <p>Every product is printed specially after you place the order.</p>
-
-                          <p>
-                            Returns or exchanges are not accepted for wrong size selected by the
-                            customer, wrong color selected by the customer, change of mind,
-                            incorrect address, delivery refusal, or ordering mistakes.
-                          </p>
-
-                          <p>
-                            If your item arrives damaged, defective, misprinted, or different
-                            from what you ordered, contact us within 24 hours of delivery with
-                            your order ID and clear photo/video proof. After verification, we
-                            will provide a replacement or suitable resolution.
-                          </p>
-
-                          <p>
-                            For COD orders, delivery/COD charges are non-refundable. Approved
-                            COD refunds will be processed manually through UPI or bank transfer
-                            after verification.
-                          </p>
-                        </div>
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                </div>
-
                 <label className="flex items-start gap-3 text-xs leading-6 text-zinc-300">
                   <input
                     type="checkbox"
@@ -795,9 +741,19 @@ export default function CheckoutModal({
                     }}
                     className="mt-1"
                   />
+
                   <span>
-                    I checked product, size, color, quantity, and shipping address. I accept the
-                    made-to-order and refund policy.
+                    I accept{" "}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-green-300 underline underline-offset-4 hover:text-green-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Terms and Conditions
+                    </a>
+                    .
                   </span>
                 </label>
 

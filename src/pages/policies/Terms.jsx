@@ -1,3 +1,5 @@
+import PolicyNav from "@/pages/policies/PolicyNav";
+
 export default function Terms() {
   return (
     <main className="min-h-screen bg-[#050805] px-4 py-24 text-white">
@@ -9,7 +11,7 @@ export default function Terms() {
         <h1 className="mt-3 text-4xl font-semibold">Terms of Service</h1>
 
         <p className="mt-3 text-sm text-zinc-400">Last updated: May 4, 2026</p>
-
+        <PolicyNav />
         <div className="mt-8 space-y-7 text-sm leading-7 text-zinc-300">
           <p>
             By placing an order on our website, you agree to these terms and to
