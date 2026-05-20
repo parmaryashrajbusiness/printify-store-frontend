@@ -648,7 +648,7 @@ export default function ProductDetails() {
         onLogout={logout}
       />
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl overflow-x-hidden px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-7xl overflow-x-hidden px-3 pb-4 pt-24 sm:px-6 sm:pb-8 sm:pt-28 lg:px-8">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300 transition hover:bg-white/10 hover:text-white sm:mb-6 sm:px-4 sm:text-sm"
@@ -960,7 +960,7 @@ export default function ProductDetails() {
 
 function ProductDetailsHeader({ user, cartCount, onHome, onCartOpen, onLogout }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
+    <header className="fixed left-0 right-0 top-0 z-[999] border-b border-white/10 bg-black/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <button type="button" onClick={onHome} className="flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-black shadow-[0_0_35px_rgba(34,197,94,0.45)] ring-1 ring-green-500/20 sm:h-12 sm:w-12">
